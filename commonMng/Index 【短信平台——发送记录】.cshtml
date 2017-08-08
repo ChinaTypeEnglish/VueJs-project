@@ -1,0 +1,516 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>发送记录</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <style type="text/css">
+        html, body {
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+
+        .am-tabs-bd {
+            border-bottom: 0px;
+            border-right: 0px;
+            border-left: 0px;
+        }
+
+        #selected1 .am-btn, #selected2 .am-btn {
+            padding: 0.65em 1em;
+        }
+
+        .selectedHight .am-btn-default {
+            border-color: #ccc;
+        }
+
+        .selectedHight input {
+            max-width: 75%;
+            display: inline-block;
+        }
+
+        #doc-modal-1 .am-modal-hd {
+            text-align: left;
+            padding-left: 20px;
+            background: #F8F8F8;
+            border-bottom: 1px solid #eee;
+        }
+
+            #doc-modal-1 .am-modal-hd .am-close {
+                top: 10px;
+            }
+
+        #doc-modal-1 .am-modal-bd {
+            background: #fff;
+        }
+
+        #doc-modal-1 .am-modal-dialog {
+            width: 700px;
+        }
+
+        #doc-modal-2 .am-modal-dialog {
+            width: 750px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 3px 3px rgba(0,0,0,0.1);
+        }
+
+        .checkpop-title-wrapper > div {
+            padding: 30px;
+        }
+
+            .checkpop-title-wrapper > div:first-child {
+                padding-bottom: 0px;
+            }
+
+        .am-sm-title {
+            display: inline-block;
+            width: 100px;
+            height: 32px;
+            line-height: 32px;
+            text-align: right;
+            float: left;
+        }
+
+        .SMSContent textarea {
+            width: 500px;
+            height: 80px;
+            float: right;
+        }
+
+        .floatRTBox {
+            float: right;
+            width: 500px;
+            height: auto;
+            float: right;
+        }
+
+        .am-sm-input {
+            width: 160px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">短信平台</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 表单输入框 -->
+        <div class="am-g">
+            <div class="am-u-sm-2 selectedHight">
+                <span style="line-height: 32px;">地区:</span>
+                <laiq-select-tree id="selected1" labelkey="text" valuekey="id" v-model="root" v-bind:model="ListByTree" maxheight="155"></laiq-select-tree>
+            </div>
+            <div class="am-u-sm-2 selectedHight">
+                <span style="display: inline-block;line-height: 32px;">短信内容:</span>
+                <input type="text" class="am-form-field" placeholder="待查询条件" v-model="txtKey">
+            </div>
+            <div class="am-u-sm-2 selectedHight">
+                <span style="display:inline-block;line-height: 32px;">手机号:</span>
+                <input type="text" class="am-form-field" placeholder="待查询条件" v-model="txtPhone">
+            </div>
+            <div class="am-u-sm-2">
+                <div id="DateBegin" class="am-input-group am-input-group-sm am-datepicker-date" style="width:89.3%;">
+                    <input type="text" class="am-form-field" v-bind:value="begin" placeholder="开始时间">
+                    <span class="am-input-group-btn am-datepicker-add-on">
+                        <button class="am-btn am-btn-default" type="button"><span class="am-icon-calendar"></span> </button>
+                    </span>
+                </div>
+            </div>
+            <div class="am-u-sm-2">
+                <div id="DateEnd" class="am-input-group am-input-group-sm am-datepicker-date" style="width:89.3%;">
+                    <input type="text" class="am-form-field" v-bind:value="end" placeholder="结束时间">
+                    <span class="am-input-group-btn am-datepicker-add-on">
+                        <button class="am-btn am-btn-default" type="button"><span class="am-icon-calendar"></span> </button>
+                    </span>
+                </div>
+            </div>
+            <div class="am-u-sm-2">
+                <div class="am-input-group am-input-group-sm">
+                    <span class="am-input-group-btn">
+                        <button class="am-btn am-btn-default" type="button" v-on:click="getList">
+                            <i class="am-icon-search"></i>
+                            &nbsp;&nbsp;查&nbsp;&nbsp;&nbsp;询&nbsp;&nbsp;
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <div class="am-u-sm-3"></div>
+        </div>
+        <!-- 占位置 -->
+        <div class="split" style="width: 100%;height: 20px;background: #fff;"></div>
+        <!-- dataGrid -->
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <table class="am-table am-table-striped am-table-hover table-main">
+                    <thead>
+                        <tr>
+                            <th>地区</th>
+                            <th>发送人</th>
+                            <th>手机号数量</th>
+                            <th>占用条数</th>
+                            <th>发送时间</th>
+                            <th>短信简略</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in GridListsData" v-bind:value="item.Id">
+                            <td>{{item.calls}}</td>
+                            <td>{{item.CustomerName}}</td>
+                            <td>{{item.MsgNum}}</td>
+                            <td>{{Math.ceil(item.msg.length/60)}}条</td>
+                            <td>{{item.AddTime}}</td>
+                            <td v-if="item.msg.length>=msgNum">{{item.msg.substring(0,msgNum)}}&nbsp;......</td>
+                            <td v-else>{{item.msg}}</td>
+                            <td>
+                                <div class="am-btn-toolbar">
+                                    <div class="am-btn-group am-btn-group-xs">
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" v-on:click="CheckView(item.Id,item.msg)">
+                                            <i class="am-icon-search"></i>
+                                            查看号码
+                                        </button>
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-warning" v-on:click="ExportExcel(item.Id)">
+                                            <i class="am-icon-download"></i>
+                                            导出Excel
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @* 分页设置 *@
+        <div class="am-tab-panel">
+            <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;">
+                <div class="am-u-sm-12">
+                    共 <span v-text="totle"></span> 条记录
+                    <div class="am-fr">
+                        <div id="page"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @* 查看号码弹框 *@
+        <div class="am-modal am-modal-no-btn" tabindex="-1" id="doc-modal-1">
+            <div class="am-modal-dialog">
+                <div class="am-modal-hd">
+                    查看号码
+                    <a href="javascript: void(0)" class="am-close am-close-spin" data-am-modal-close>&times;</a>
+                </div>
+                <div class="am-modal-bd">
+                    <div class="checkpop-title-wrapper">
+                        <div class="SMSContent">
+                            <span class="am-sm-title">发送短信内容</span>
+                            <textarea>{{bb}}</textarea>
+                            <div style="clear:both;"></div>
+                        </div>
+                        <div>
+                            <span class="am-sm-title">发送状态</span>
+                            <div class="floatRTBox">
+                                <div class="selectedHight" style="display:inline-block;float:left;">
+                                    <laiq-select id="selected2" btnwidth="160" maxheight="180" v-bind:model="SendState" v-model="thisId"></laiq-select>
+                                </div>
+                                <span class="am-sm-text-phone" style="margin:0 10px;">手机号</span>
+                                <input type="text" v-model="PhoneText" class="am-form-field am-sm-input" placeholder="请输入手机号" />
+                                <button class="am-btn am-btn-default am-btn-xs am-text-default am-btn-my" style="margin-left:10px;" v-on:click="PopCheckView(ID)">
+                                    查&nbsp;&nbsp;询
+                                </button>
+                            </div>
+                            <div style="clear:both;"></div>
+                        </div>
+                    </div>
+                    <div class="am-g">
+                        <div class="am-u-sm-12">
+                            <table class="am-table am-table-striped am-table-hover table-main">
+                                <thead>
+                                    <tr>
+                                        <th>手机号</th>
+                                        <th>类型</th>
+                                        <th>归属地</th>
+                                        <th>发送状态</th>
+                                        <th>回复简略</th>
+                                        <th>查看回复</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="item in PopGridLists" v-bind:value="item.Id">
+                                        <td style="text-align:left;">{{item.Phone}}</td>
+                                        <td style="text-align:left;">{{item.catName}}</td>
+                                        <td style="text-align:left;">{{item.province}}</td>
+                                        <td style="text-align:left;" v-if="item.State==0">未发送</td>
+                                        <td style="text-align:left;" v-else-if="item.State==1">成功</td>
+                                        <td style="text-align:left;" v-else-if="item.State==2">已发送</td>
+                                        <td style="text-align:left;color:red;" v-if="item.Msg.length>Msglength">{{item.Msg.substring(0,Msglength)}}&nbsp;......</td>
+                                        <td style="text-align:left;color:red;" v-else>{{item.Msg}}</td>
+                                        <td style="text-align:left;" v-if="item.RecoveryState===false"></td>
+                                        <td style="text-align:left;" v-else>
+                                            <button class="am-btn am-btn-default am-btn-xs am-text-secondary" v-on:click="CheckPopListsInfos(item.Id,item.Phone,item.MsgNum)">
+                                                <i class="am-icon-search"></i>
+                                                查看回复详情
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                @* 弹出框表格分页 *@
+                <div class="am-tabs-bd" style="height: 50px;position:relative">
+                    <!-- 分页 发送记录列表 -->
+                    <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;position:absolute;">
+                        <div class="am-u-sm-12" style="text-align:left">
+                            共 <span v-text="Poptotle"></span> 条记录
+                            <div class="am-fr">
+                                <div id="page2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Scripts/vue/laiqui.min.js"></script>
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            thisId: function (val, oldVal) {
+                var _this = this;
+                _this.selectedOption = val;
+                _this.PopCheckView(_this.ID);
+            },
+            root: function (val, oldVal) {
+                var _this = this;
+                _this.treeid = val;
+                _this.GetListsByTree();
+                _this.getList(_this.treeid);
+            }
+        },
+        data: function () {
+            return {
+                msgNum: 35,
+                Msglength: 15,
+                pageTitle: '',
+                GridListsData: [],
+                selectedType: '',
+                CompanyId: '',
+                txtKey: '',
+                txtPhone: '',
+                begin: '',
+                end: '',
+                totle: 0,
+                count: 0,
+                ViewsTitle: '',
+                ViewState: false,
+                bb: '',
+                // 下拉树型结构
+                ListByTree: [],
+                root: 'root',
+                treeid: 864,
+                // 弹出框数据
+                PopGridLists: [],
+                Poptotle: 0,
+                Popcount: 0,
+                SendState: [{ value: 0, label: "全部状态" }, { value: 1, label: "成功" }, { value: 2, label: "已发送" }, { value: 3, label: "失败" }, { value: 4, label: "未知【关机、停机、没信号等】" }],
+                thisId: 0,
+                Msg: '',
+                ID: '',
+                PhoneText: '',
+                selectedOption: ''
+            }
+        },
+        methods: {
+            // 发送记录列表加载
+            getList: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/sms/Report/setList", { page: 1, start: 0, limit: 10, CompanyId: _this.CompanyId, key: _this.treeid, begin: _this.begin, end: _this.end, txtKey: _this.txtKey, txtPhone: _this.txtPhone, Id: _this.treeid }, function (data) {
+                    _this.GridListsData = data.data;
+                    _this.totle = data.total;
+                    _this.count = Math.ceil(_this.totle / 10);
+                    if (_this.count > 1) {
+                        $("#page").show();
+                        laypage({
+                            cont: "page", pages: _this.count, groups: 5, skin: "#1E9FFF", jump: function (obj, first) {
+                                if (!first) {
+                                    $.post("/sms/Report/setList", { page: obj.curr, start: 0, limit: 10, CompanyId: _this.CompanyId, key: _this.treeid, begin: _this.begin, end: _this.end, txtKey: _this.txtKey, txtPhone: _this.txtPhone, Id: _this.treeid }, function (data) {
+                                        _this.GridListsData = data.data;
+                                        _this.count = data.total;
+                                    }, "json");
+                                }
+                            }
+                        });
+                    } else {
+                        // 小于1页或者没有数据的情况下不显示分页
+                        $("#page").hide();
+                    }
+                    layer.closeAll();
+                }, "json");
+            },
+            // 下拉树
+            GetListsByTree: function () {
+                var _this = this;
+                $.post("/sms/SmsHome/ListByTree", { page: 1, start: 0, limit: 10, node: _this.root, filter: "[{ property: 'AreaId', value: 864 }]", id: _this.root }, function (data) {
+                    _this.ListByTree = data;
+                }, "json");
+            },
+            // 发送记录查看号码
+            CheckView: function (id, msg) {
+                var _this = this;
+                _this.ID = id;
+                _this.bb = msg;
+                _this.Msg = msg;
+                _this.PhoneText = '';
+                _this.PopCheckView(id);
+                $('#doc-modal-1').modal({
+                    relatedTarget: this,
+                    closeViaDimmer: false
+                })
+            },
+            // 查看号码弹出框
+            PopCheckView: function (ID) {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/sms/Report/ReportList", { page: 1, start: 0, limit: 10, Id: ID, IsWhat: _this.selectedOption, key: _this.PhoneText }, function (data) {
+                    _this.PopGridLists = data.data;
+                    _this.Poptotle = data.total;
+                    _this.Popcount = Math.ceil(_this.Poptotle / 10);
+                    if (_this.Popcount > 1) {
+                        $("#page2").show();
+                        laypage({
+                            cont: "page2", pages: _this.Popcount, groups: 3, skin: "#1E9FFF", jump: function (obj, first) {
+                                if (!first) {
+                                    $.post("/sms/Report/ReportList", { page: obj.curr, start: 0, limit: 10, Id: ID, IsWhat: _this.selectedOption, key: _this.PhoneText }, function (data) {
+                                        _this.PopGridLists = data.data;
+                                        _this.Popcount = data.total;
+                                    }, "json");
+                                }
+                            }
+                        });
+                    } else {
+                        // 小于1页或者没有数据的情况下不显示分页
+                        $("#page2").hide();
+                    }
+                    layer.closeAll();
+                }, "json");
+            },
+            // 导出Excel
+            ExportExcel: function (id) {
+                var _this = this;
+                var host = window.location.host;
+                var thisUrl = 'http://' + host + '/sms/DownDataExcel/DownSmsExcel?id=' + id;
+                var ja = [];
+                var jo = { 'Id': id, 'Name': (new Date()).valueOf() + "_短信发送记录.xls", 'Size': "-", 'IsOss': false, 'Url': thisUrl };
+                ja.push(jo);
+                jsObj.nodeAction(JSON.stringify(ja), 1);
+            },
+            // 查看回复详情弹框
+            CheckPopListsInfos: function (id, phone, MsgNum) {
+                layer.open({
+                    type: 2,
+                    title: "查看回复",
+                    shadeClose: true,
+                    shade: 0.8,
+                    area: ['700px', '450px'],
+                    btn: ['关闭'],
+                    content: "/Sms/Report/ViewReply?phone=" + phone + "&num=" + MsgNum
+                });
+            },
+            initSelectDate: function () {
+                var _this = this;
+                // 开始时间初始化
+                $("#DateBegin").datepicker({ format: "yyyy-mm-dd" }).on("changeDate.datepicker.amui", function (event) {
+                    _this.begin = event.date.format("yyyy-MM-dd");
+                });
+                // 结束时间初始化
+                $("#DateEnd").datepicker({ format: "yyyy-mm-dd" }).on("changeDate.datepicker.amui", function (event) {
+                    _this.end = event.date.format("yyyy-MM-dd");
+                });
+            },
+        },
+        mounted: function () {
+            var _this = this;
+            //下拉树型结果调用
+            _this.GetListsByTree(_this.treeid);
+            // 发送记录列表调用函数
+            _this.getList(_this.treeid);
+            // 下来框与实践初始化
+            _this.initSelectDate();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "发送记录"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

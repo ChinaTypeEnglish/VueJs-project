@@ -1,0 +1,342 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>发送统计</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <style type="text/css">
+        html, body {
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+
+        .am-tabs-bd {
+            border-bottom: 0px;
+            border-right: 0px;
+            border-left: 0px;
+        }
+
+        .selectedHight .am-btn {
+            padding: 0.41em 1em;
+        }
+
+        #selected1 .am-btn, #selected2 .am-btn {
+            padding: 0.65em 1em;
+        }
+
+        .selectedHight .am-btn-default {
+            border-color: #ccc;
+        }
+
+        .selectedHight input {
+            max-width: 75%;
+            display: inline-block;
+        }
+
+        #doc-modal-1 .am-modal-hd {
+            text-align: left;
+            padding-left: 20px;
+            background: #F8F8F8;
+            border-bottom: 1px solid #eee;
+        }
+
+            #doc-modal-1 .am-modal-hd .am-close {
+                top: 10px;
+            }
+
+        #doc-modal-1 .am-modal-bd {
+            background: #fff;
+        }
+
+        #doc-modal-1 .am-modal-dialog {
+            width: 700px;
+        }
+
+        #doc-modal-2 .am-modal-dialog {
+            width: 750px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 3px 3px rgba(0,0,0,0.1);
+        }
+
+        .checkpop-title-wrapper > div {
+            padding: 30px;
+        }
+
+            .checkpop-title-wrapper > div:first-child {
+                padding-bottom: 0px;
+            }
+
+        .am-sm-title {
+            display: inline-block;
+            width: 100px;
+            height: 32px;
+            line-height: 32px;
+            text-align: right;
+            float: left;
+        }
+
+        .SMSContent textarea {
+            width: 500px;
+            height: 80px;
+            float: right;
+        }
+
+        .floatRTBox {
+            float: right;
+            width: 500px;
+            height: auto;
+            float: right;
+        }
+
+        .am-sm-input {
+            width: 160px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">短信平台</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 表单输入框 -->
+        <div class="am-g">
+            <div class="am-u-sm-2 selectedHight">
+                <span style="line-height: 32px;">地区:</span>
+                <laiq-select-tree id="selected1" labelkey="text" valuekey="id" v-model="root" v-bind:model="ListByTree" maxheight="155"></laiq-select-tree>
+            </div>
+            <div class="am-u-sm-2 selectedHight">
+                <span style="line-height: 32px;">年份:</span>
+                <select id="selected2">
+                    <option v-for="item in GetYearLists" v-bind:value="item.id">{{item.text}}</option>
+                </select>
+            </div>
+            <div class="am-u-sm-8"></div>
+        </div>
+        <!-- 获取整年的所有发送信息记录 -->
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <div style="width: 100%; padding: .6rem 1.25rem; background: #ddd; margin-top: 2rem;">{{GetTitInfos}}</div>
+            </div>
+        </div>
+        <!-- 树状图列表 -->
+        <div id="main1" style="width: 100%;height:650px;"></div>
+    </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Scripts/vue/laiqui.min.js"></script>
+<script type="text/javascript" src="/Scripts/echarts.min.1.js"></script>
+
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            root: function (val, oldVal) {
+                var _this = this;
+                _this.treeid = val;
+                _this.MrID = val;
+                // 下拉树型结构
+                _this.GetListsByTree(_this.treeid);
+                // 获取整年的所有发送信息记录
+                _this.GetTitInfosFun(_this.selectedYear, _this.treeid)
+                // 获取树状图
+                _this.GetHistogram(_this.selectedYear, _this.treeid);
+            }
+        },
+        data: function () {
+            return {
+                GetYearLists: [],
+                selectedYear: '',
+                selectedIsFree: '',
+                IsFreeLists: [{ value: 0, label: '全部数据' }, { value: 1, label: '免费' }, { value: 2, label: '不免费' }],
+                thisId: '',
+                // 下拉树型结构
+                ListByTree: [],
+                root: 'root',
+                treeid: 864,
+                setListChart: [],
+                MM: [],
+                NUM: [],
+                // 获取整年的所有发送信息记录
+                GetTitInfos: []
+            }
+        },
+        methods: {
+            // 下拉树
+            GetListsByTree: function (treeid) {
+                var _this = this;
+                $.post("/sms/SmsHome/ListByTree", { page: 1, start: 0, limit: 10, node: _this.root, filter: "[{ property: 'AreaId', value: 864 }]", id: _this.treeid }, function (data) {
+                    _this.ListByTree = data;
+                }, "json");
+            },
+            // 获取年份
+            GetYears: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/sms/SmsHome/getYear", { page: 1, start: 0, limit: 10 }, function (data) {
+                    _this.GetYearLists = data;
+                    _this.selectedYear = data[0].id;
+                    // 获取整年的所有发送信息记录
+                    _this.GetTitInfosFun(_this.selectedYear, _this.treeid)
+                    // 获取树状图
+                    _this.GetHistogram(_this.selectedYear, _this.treeid);
+                    layer.closeAll();
+                }, "json");
+            },
+            // 获取整年的所有发送信息记录
+            GetTitInfosFun: function (year, treeid) {
+                var _this = this;
+                $.post("/sms/Statistics/GetTit", { key: treeid, year: year, isC: '' }, function (data) {
+                    _this.GetTitInfos = data;
+                });
+            },
+            // 树状图显示
+            GetHistogram: function (year, treeid) {
+                var _this = this;
+                $.post("/sms/Statistics/setListChart", { page: 1, start: 0, limit: 10, year: year, key: treeid }, function (data) {
+                    _this.setListChart = data.myStore;
+                    _this.MM = [];
+                    _this.NUM = [];
+                    $.each(data.myStore, function (index, item) {
+                        _this.MM.push(item.name);
+                        _this.NUM.push(item.data);
+                    })
+                    // 基于准备好的dom，初始化echarts实例
+                    var myChart = echarts.init(document.getElementById('main1'));
+
+                    // 指定图表的配置项和数据
+                    var option = {
+                        color: ['#3398DB'],
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                                type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                            }
+                        },
+                        grid: {
+                            left: '1%',
+                            right: '1%',
+                            bottom: '3%',
+                            containLabel: true
+                        },
+                        xAxis: [
+                            {
+                                type: 'category',
+                                data: _this.MM,
+                                axisTick: {
+                                    alignWithLabel: true
+                                }
+                            }
+                        ],
+                        yAxis: [
+                            {
+                                type: 'value'
+                            }
+                        ],
+                        series: [
+                            {
+                                name: '直接访问',
+                                type: 'bar',
+                                barWidth: '60%',
+                                data: _this.NUM
+                            }
+                        ]
+                    };
+
+                    // 使用刚指定的配置项和数据显示图表。
+                    myChart.setOption(option);
+                }, "json");
+
+            },
+            initSelectDate: function () {
+                var _this = this;
+                // 下拉年份初始化
+                $('#selected2').selected({ 'btnWidth': '75%', btnSize: 'lg', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.selectedYear = $(this).val();
+                    // 获取整年的所有发送信息记录
+                    _this.GetTitInfosFun(_this.selectedYear, _this.treeid);
+                    // 获取树状图
+                    _this.GetHistogram(_this.selectedYear, _this.treeid);
+                });
+            },
+        },
+        mounted: function () {
+            var _this = this;
+            //获取年份下拉
+            _this.GetYears();
+            //下拉树型结果调用
+            _this.GetListsByTree(_this.treeid);
+            // 下来框与实践初始化
+            _this.initSelectDate();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "发送统计"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

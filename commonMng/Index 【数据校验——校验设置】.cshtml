@@ -1,0 +1,661 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>校验设置</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <link href="@(Url.Content("~/Content/global.css"))" rel="stylesheet" />
+    <style type="text/css">
+        html{
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+        .selectedHight .am-btn, .popmodelpanel .am-btn {
+            padding: 0.695em 1em;
+        }
+        .popmodelpanel input {
+            width: 80%;
+        }
+        .popmodelpanel .am-btn {
+            background: none;
+        }
+        #DateBegin .am-btn {
+            border-color: #ccc;
+            background: #e6e6e6;
+        }
+        .am-datepicker-dropdown {
+            z-index: 198910161;
+        }
+        .split {
+            width: 100%;
+            height: 20px;
+            background: #fff;
+        }
+        .labelFormat{
+            line-height: 33px;
+            margin-bottom: 0px;
+        }
+        .am-datepicker{
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">数据校验</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 下拉组 -->
+        <div class="selected-wrapper">
+            <div class="am-g">
+                <div class="am-u-sm-3 selectedHight">
+                    <div class="am-form-group">
+                        <label class="am-u-sm-3 am-form-label am-text-default labelFormat">考试年度:</label>
+                        <div class="am-u-sm-9">
+                            <laiq-select valuekey="id" labelkey="text" btnwidth="100%" maxheight="155" search-Box v-bind:model="GetYearLists" v-model="SelectedYear"></laiq-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-u-sm-3 selectedHight">
+                    <div class="am-form-group">
+                        <label class="am-u-sm-3 am-form-label am-text-default labelFormat">考试管理:</label>
+                        <div class="am-u-sm-9">
+                            <laiq-select valuekey="id" labelkey="text" btnwidth="100%" maxheight="155" v-bind:model="ModifyKsLists" v-model="SelectedModifyKs"></laiq-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-u-sm-3 selectedHight">
+                    <div class="am-form-group">
+                        <div class="am-u-sm-9" id="SelectedRemoveKsEmpty">
+                            <laiq-select valuekey="id" labelkey="text" btnwidth="100%" maxheight="155" v-bind:model="RemoveKsLists" v-model="SelectedRemoveKs"></laiq-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-u-sm-3"></div>
+            </div>
+        </div>
+        <!-- 仅占位置 -->
+        <div class="split"></div>
+        <!-- 按钮组 -->
+        <div class="Btn-wrapper">
+            <div class="am-g">
+                <div class="am-u-sm-2">
+                    <div class="am-input-group am-input-group-sm">
+                        <span class="am-input-group-btn">
+                            <button class="am-btn am-btn-secondary" type="button" v-on:click="AddKsFun">
+                                <i class="am-icon-plus"></i>
+                                添 加 考 试
+                            </button>
+                        </span>
+                        <span class="am-input-group-btn">
+                            <button class="am-btn am-btn-danger" type="button" v-on:click="RemoveAllFun">
+                                <i class="am-icon-trash"></i>
+                                批 量 删 除
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="am-u-sm-8"></div>
+            </div>
+        </div>
+        <!-- 仅占位置 -->
+        <div class="split"></div>
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <table class="am-table am-table-striped am-table-hover table-main">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" v-model="CheckedAll" />
+                            </th>
+                            <th>考试代码</th>
+                            <th>考试名称</th>
+                            <th>考试文件名称</th>
+                            <th>考试年月</th>
+                            <th>下发时间</th>
+                            <th>上传结束时间</th>
+                            <th>下发人</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in GridListsData" v-bind:value="item.CustomerID">
+                            <td><input type="checkbox" v-model="item.CheckItem" /></td>
+                            <td>{{item.ksdm}}</td>
+                            <td>{{item.ksname}}</td>
+                            <td>{{item.FileName}}</td>
+                            <td>{{item.ksny}}</td>
+                            <td>{{item.UpLoadTime}}</td>
+                            <td>{{item.UploadEndTime}}</td>
+                            <td>{{item.UpLoadUser}}</td>
+                            <td>
+                                <div class="am-btn-toolbar">
+                                    <div class="am-btn-group am-btn-group-xs">
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" v-on:click="EditKsFun(item.id)">
+                                            <i class="am-icon-pencil-square-o"></i>
+                                            编辑
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 分页设置 -->
+        <div class="am-tab-panel">
+            <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;">
+                <div class="am-u-sm-12">
+                    共 <span v-text="totle"></span> 条记录
+                    <div class="am-fr">
+                        <div id="page"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 弹出框 -->
+        <div id="AddKs-PopWrapper" class="am-tab-panel popmodelpanel" style="width:100%;height:auto;margin-top:20px;" v-show="ShowViews">
+            <form class="am-form am-form-horizontal">
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3-a" class="am-u-sm-3 am-form-label am-text-danger">考试代码:</label>
+                            <div class="am-u-sm-9">
+                                <input class="am-form-field" type="text" name="KsDm" v-model="Ks_Dm" maxlength="3" placeholder="请输入考试代码" v-bind:readonly="IsReadonly">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">考试名称:</label>
+                            <div class="am-u-sm-9">
+                                <input class="am-form-field" type="text" name="KsName" v-model="Ks_Name" placeholder="请输入考试名称" v-bind:readonly="IsReadonly">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-show="ShowOptions">
+                    <div class="am-g">
+                        <div class="am-u-sm-12">
+                            <div class="am-form-group">
+                                <label for="doc-ipt-3-a" class="am-u-sm-3 am-form-label am-text-danger">考试年月:</label>
+                                <div class="am-u-sm-9">
+                                    <input class="am-form-field" type="text" name="KsDm" v-model="Ks_YMD"  placeholder="请输入考试年月" v-bind:readonly="IsReadonly">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-g">
+                        <div class="am-u-sm-12">
+                            <div class="am-form-group">
+                                <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">下发时间:</label>
+                                <div class="am-u-sm-9">
+                                    <div id="UpLoadDate" class="am-input-group am-input-group-sm am-datepicker-date">
+                                        <input type="text" class="am-form-field" v-bind:value="Ks_Date" v-model="Ks_Date" placeholder="请输入下发时间" style="font-size: 1.6rem!important">
+                                        <span class="am-input-group-btn am-datepicker-add-on">
+                                            <button class="am-btn am-btn-default" type="button"><span class="am-icon-calendar"></span> </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-g">
+                        <div class="am-u-sm-12">
+                            <div class="am-form-group">
+                                <label for="doc-ipt-3-a" class="am-u-sm-3 am-form-label am-text-danger">上传结束时间:</label>
+                                <div class="am-u-sm-9">
+                                    <div id="UploadEndDate" class="am-input-group am-input-group-sm am-datepicker-date">
+                                        <input type="text" class="am-form-field" v-bind:value="Ks_EndDate" v-model="Ks_EndDate" placeholder="请输入上传结束时间" style="font-size: 1.6rem!important">
+                                        <span class="am-input-group-btn am-datepicker-add-on">
+                                            <button class="am-btn am-btn-default" type="button">
+                                                <span class="am-icon-calendar"></span> 
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-g">
+                        <div class="am-u-sm-12">
+                            <div class="am-form-group">
+                                <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">下发人:</label>
+                                <div class="am-u-sm-9">
+                                    <input class="am-form-field" readonly="true" type="text" name="KsName" v-model="Ks_Admin" placeholder="请输入下发人">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Content/vue/laiqui/laiqui.min.js"></script>
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            // 监听年份选择事件
+            SelectedYear: function (val, oldVal) {
+                var _this = this;
+                _this.SelectYearId = val;
+                _this.GetListsFun(_this.SelectYearId);
+            },
+            // 监听修改考试选中事件
+            SelectedModifyKs: function (val, oldVal) {
+                var _this = this;
+                if(val == -1)return;
+                _this.ShowOptions = false;
+                _this.IsReadonly = false; // 仅仅在编辑考试下启用
+                _this.title = '修改考试';
+                _this.PopArea = ['500px', '240px'];
+                _this.PopUrl = '/datacheck/dc_set/updDcks';
+                _this.Ks_Id = val;
+                $.each(_this.ModifyKsLists,function(index,item){
+                    if(item.id == val){
+                        _this.Ks_Dm = item.text.substring(1,4);
+                        _this.Ks_Name = item.text.substring(5);
+                    }
+                })
+                _this.AddKsAndModifyKsFun();
+            },
+            // 监听删除考试选中事件
+            SelectedRemoveKs: function (val, oldVal) {
+                var _this = this;
+                if(val == -1)return;
+                layer.confirm('您确定要删除此考试信息？', {
+                    icon: 3,
+                    title: '删除考试',
+                    btn: ['确 定', '取 消'] //按钮
+                }, function () {
+                    $.post('/datacheck/dc_set/delDcks', {
+                        uid: '',
+                        token: '',
+                        ksid: val,
+                        isSh: 1
+                    }, function (data) {
+                        if (data.success) {
+                            layer.closeAll();
+                            alert(data.Msg)
+                            _this.ModifyKsLists = []; // 清空获取修改考试下拉列表数据
+                            _this.RemoveKsLists = []; // 清空获取删除考试下拉列表数据
+                            // 清空span下的值
+                            $("#SelectedRemoveKsEmpty .am-fl").text("");
+                            // 修改考试加载函数
+                            _this.GetModifyKsFun();
+                            // 删除考试加载函数
+                            _this.GetRemoveKsFun();
+                        }
+                    }, "json");
+                }, function () {
+                    return;
+                });
+            },
+            // 全选状态切换
+            CheckedAll: function () {
+                var _this = this;
+                for (var i = 0; i < _this.GridListsData.length; i++) {
+                    _this.GridListsData[i].CheckItem = _this.CheckedAll;
+                }
+            }
+        },
+        data: function () {
+            return {
+                GridListsData: [],
+                totle: 0,
+                count: 0, 
+                CheckedAll: false, // 全选效果显示
+                CheckedAllIdArry: [], // 全选数据
+                GetYearLists: [], // 获取年份下拉列表数据
+                SelectYearId: '', // 获取选中年份对应ID
+                SelectedYear: '', // 判断 “选择年份” 下拉列表是否是单选, v-model对应的值, 单选为number,  多选为Array;
+                SelectedModifyKs: '', // 判断 “修改考试” 下拉列表是否是单选, v-model对应的值, 单选为number,  多选为Array;
+                SelectedRemoveKs: '', // 判断 “删除考试” 下拉列表是否是单选, v-model对应的值, 单选为number,  多选为Array;
+                ModifyKsLists: [], // 获取修改考试下拉列表数据
+                RemoveKsLists: [], // 获取删除考试下拉列表数据
+                ShowViews: false, // 判断弹框是否显示
+                ShowOptions: false, // 在添加考试和修改考试下拉不显示其他选项，在编辑考试下显示其他选项
+                IsReadonly: false, // 仅仅在编辑考试下启用
+                title: '',
+                PopUrl: '',
+                PopArea: '',
+                Ks_Id: '',
+                Ks_Dm: '',
+                Ks_Name: '',
+                Ks_YMD: '',
+                Ks_Date: '',
+                Ks_EndDate: '',
+                Ks_Admin: '',
+            }
+        },
+        methods: {
+            GetListsFun: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/datacheck/dc_set/dc_setList", {
+                    page: 1,
+                    start: 0,
+                    limit: 10,
+                    ksyear: _this.SelectYearId
+                }, function (data) {
+                    _this.GridListsData = data.data;
+                    _this.totle = data.total;
+                    // 为每个对象设置是否选中
+                    if (_this.GridListsData !== null) {
+                        for (var i = 0; i < _this.GridListsData.length; i++) {
+                            data.data[i].CheckItem = false;
+                        }
+                        _this.count = Math.ceil(_this.totle / 10);
+                        if (_this.count > 1) {
+                            $("#page").show();
+                            laypage({
+                                cont: "page", pages: _this.count, groups: 5, skin: "#1E9FFF", jump: function (obj, first) {
+                                    if (!first) {
+                                        $.post("/datacheck/dc_set/dc_setList", { page: obj.curr, start: 0, limit: 10, ksyear: _this.SelectYearId}, function (data) {
+                                            _this.GridListsData = data.data;
+                                            _this.count = data.total;
+                                            // _this.CheckedAll = false;// 翻页过后取消全选
+                                        }, "json");
+                                    }
+                                }
+                            });
+                        } else {
+                            // 小于1页或者没有数据的情况下不显示分页
+                            $("#page").hide();
+                        }
+                        layer.closeAll();
+                    } else {
+                        layer.alert('暂无此次搜索项内容', {
+                            icon: 5,
+                            title: '提示',
+                            skin: 'layer-ext-moon'
+                        })
+                    }
+                }, "json");
+            },
+            // 获取年份
+            GetYearsFun: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/datacheck/dc_set/getDc_ksYear", { page: 1, start: 0, limit: 25}, function (data) {
+                    _this.GetYearLists = data;
+                }, "json");
+            },
+            // 获取修改考试下拉列表数据
+            GetModifyKsFun: function () {
+                var _this = this;
+                $.post("/datacheck/dc_set/getDcks", { page: 1, start: 0, limit: 25 }, function (data) {
+                    $.each(data, function (index, item) {
+                        _this.ModifyKsLists.push(item);
+                    })
+                }, "json");
+            },
+            // 获取删除考试下拉列表数据
+            GetRemoveKsFun: function () {
+                var _this = this;
+                $.post("/datacheck/dc_set/getDcks?ty=1", { page: 1, start: 0, limit: 25 }, function (data) {
+                    $.each(data, function (index, item) {
+                        _this.RemoveKsLists.push(item);
+                    })
+                }, "json");
+            },
+            // 添加考试
+            AddKsFun: function () {
+                var _this = this;
+                _this.ShowOptions = false;
+                _this.IsReadonly = false; // 仅仅在编辑考试下启用
+                _this.Ks_Dm = '';
+                _this.Ks_Name = '';
+                _this.title = '添加考试';
+                _this.PopArea = ['500px', '240px'];
+                _this.PopUrl = '/datacheck/dc_set/addDcks';
+                _this.AddKsAndModifyKsFun();
+            },
+            // 编辑考试
+            EditKsFun: function (Id) {
+                var _this = this;
+                $.each(_this.GridListsData,function(index,item){
+                    if(item.id == Id){
+                        _this.Ks_Dm = item.ksdm;
+                        _this.Ks_Name = item.ksname;
+                        _this.Ks_YMD = item.ksny;
+                        _this.Ks_Date = item.UpLoadTime;
+                        _this.Ks_EndDate = item.UploadEndTime;
+                        _this.Ks_Admin = item.UpLoadUser;
+                    }
+                })
+                _this.IsReadonly =  true, // 仅仅在编辑考试下启用
+                _this.title = '编辑考试';
+                _this.PopUrl = '/datacheck/dc_set/updDcksFile';
+                _this.PopArea = ['500px', '450px'];
+
+                // 下发时间初始化
+                $("#UpLoadDate").datepicker({ format: "yyyy-mm-dd" }).on("changeDate.datepicker.amui", function (event) {
+                    _this.Ks_Date = event.date.format("yyyy-MM-dd");
+                });
+                // 重新为弹出时间选择框设置新值
+                $("#UpLoadDate").datepicker('setValue', _this.Ks_Date);
+
+                // 请输入上传结束时间初始化
+                $("#UploadEndDate").datepicker({ format: "yyyy-mm-dd" }).on("changeDate.datepicker.amui", function (event) {
+                    _this.Ks_EndDate = event.date.format("yyyy-MM-dd");
+                });
+                // 重新为弹出时间选择框设置新值
+                $("#UploadEndDate").datepicker('setValue', _this.Ks_EndDate);
+
+                _this.ShowOptions = true; // 控制其他选项是否显示
+
+                layer.open({
+                    type: 1,
+                    title: _this.title,
+                    shade: 0.8,
+                    move: false,
+                    btn: ['提交', '取消'],
+                    area: _this.PopArea, //宽高
+                    content: $("#AddKs-PopWrapper"),
+                    yes: function (index, layero) {
+                        $.ajax({
+                            url: _this.PopUrl,
+                            data: {
+                                uid:  '',
+                                token:  '',
+                                id: Id,
+                                ksdm: _this.Ks_Dm,
+                                ksname: _this.Ks_Name,
+                                ksny: _this.Ks_YMD,
+                                UpLoadTime: _this.Ks_Date,
+                                UploadEndTime: _this.Ks_EndDate,
+                                UpLoadUser: _this.Ks_Admin
+                            },
+                            type: 'post',
+                            dataType: 'json',
+                            success: function (data) {
+                                if (data.success == true) {
+                                    alert(data.Msg);
+                                    layer.closeAll();
+                                    // 修改考试加载函数
+                                    _this.GetModifyKsFun();
+                                    // 删除考试加载函数
+                                    _this.GetRemoveKsFun();
+                                } else {
+                                    alert('添加失败：' + data.Msg);
+                                }
+                            }
+                        })
+                    }
+                });
+            },
+            // 添加考试和修改考试共用一套模板
+            AddKsAndModifyKsFun: function () {
+                var _this = this;
+                layer.open({
+                    type: 1,
+                    title: _this.title,
+                    shade: 0.8,
+                    move: false,
+                    btn: ['提交', '取消'],
+                    area: _this.PopArea, //宽高
+                    content: $("#AddKs-PopWrapper"),
+                    yes: function (index, layero) {
+                        $.ajax({
+                            url: _this.PopUrl,
+                            data: {
+                                uid: '',
+                                token: '',
+                                ksid: _this.Ks_Id,
+                                kscode: _this.Ks_Dm,
+                                ksname: _this.Ks_Name
+                            },
+                            type: 'post',
+                            dataType: 'json',
+                            success: function (data) {
+                                if (data.success == true) {
+                                    alert(data.Msg);
+                                    layer.closeAll();
+                                    _this.ModifyKsLists = []; // 清空获取修改考试下拉列表数据
+                                    _this.RemoveKsLists = []; // 清空获取删除考试下拉列表数据
+                                    // 修改考试加载函数
+                                    _this.GetModifyKsFun();
+                                    // 删除考试加载函数
+                                    _this.GetRemoveKsFun();
+                                } else {
+                                    alert('添加失败：' + data.Msg);
+                                }
+                            }
+                        })
+                    }
+                });
+            },
+            // 批量删除
+            RemoveAllFun: function () {
+                var _this = this;
+                var a = 0;// 选中的数量
+                _this.CheckedAllIdArry = [];
+                for (var i = 0; i < _this.GridListsData.length; i++) {
+                    if (_this.GridListsData[i].CheckItem == true) {
+                        a++;
+                        _this.CheckedAllIdArry.push(_this.GridListsData[i]);// 将选中的用户的id存入CheckedAllIdArry数组
+                    }
+                }
+                var JsonDataCheckedAll = JSON.stringify(_this.CheckedAllIdArry);//将json对象转换成json字符串数组
+                if (a >= 1) {
+                    layer.confirm('您确定要删除所选中考试信息？', {
+                        icon: 3,
+                        title: '删除考试',
+                        btn: ['确 定', '取 消'] //按钮
+                    }, function () {
+                        $.post('/user/del', {
+                            
+                        }, function (data) {
+                            if (data.success) {
+                                layer.closeAll();
+                                alert(data.Msg)
+                                // 删除完毕后重新加载列表数据
+                                _this.GetListsFun();
+                            }
+                        }, "json");
+                    }, function () {
+                        return;
+                    });
+                } else {
+                    layer.alert('请选择要批量删除考试信息？', {
+                        icon: 8,
+                        title: '提示',
+                        skin: 'layer-ext-moon'
+                    })
+                }
+            },
+            initSelectDate: function () {
+                var _this = this;
+            }
+        },
+        mounted: function () {
+            var _this = this;
+            // 年份加载函数
+            _this.GetYearsFun();
+            // 充值记录列表调用函数
+            _this.GetListsFun();
+            // 修改考试加载函数
+            _this.GetModifyKsFun();
+            // 删除考试加载函数
+            _this.GetRemoveKsFun();
+            // 下拉初始化
+            // _this.initSelectDate();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "校验设置"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

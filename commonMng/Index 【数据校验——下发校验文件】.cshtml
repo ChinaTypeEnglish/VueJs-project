@@ -1,0 +1,884 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>下发校验文件</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <link href="@(Url.Content("~/Content/global.css"))" rel="stylesheet" />
+    <style type="text/css">
+         html{
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+        .split {
+            width: 100%;
+            height: 20px;
+            background: #fff;
+        }
+        .UpLoader-wrapper{
+            width: 800px;
+            height: auto;
+            border: 1px solid #eee;
+            padding: 40px 30px;
+            margin: 100px auto;
+        }
+        .am-form-group{
+            overflow: hidden;
+        }
+        .laiqHeight .am-btn{
+            padding: 0.7rem 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">数据校验</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 按钮组 -->
+        <div class="UpLoader-wrapper">
+            <form class="am-form">
+                <fieldset>
+                    <legend>发送文件</legend>
+                    <div class="am-g">
+                        <div class="am-u-sm-12">
+                            <div class="am-form-group">
+                                <label class="am-u-sm-2 am-form-label am-text-default labelFormat" style="line-height: 32px;">下发文件名</label>
+                                <div class="am-u-sm-7">
+                                    <input type="text" id="doc-ipt-3" placeholder="请上传需要上传的文件" v-bind:value="fileName">
+                                </div>
+                                <div class="am-u-sm-3">
+                                    <div class="am-form-group am-form-file">
+                                        <button type="button" class="am-btn am-btn-secondary am-btn-sm" style="height: 32px;">
+                                            <i class="am-icon-cloud-upload"></i>
+                                            选择要上传的文件
+                                        </button>
+                                        <input id="doc-form-file" type="file">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="am-form-group"> 
+                                <label class="am-u-sm-2 am-form-label am-text-default labelFormat" style="line-height: 32px;">下发人</label>
+                                <div class="am-u-sm-7">
+                                    <input type="text" id="doc-ipt-3" v-bind:value="SendAdmin" readonly="true">
+                                </div>
+                                <div class="am-u-sm-3"></div>
+                            </div>
+                            <div class="am-form-group">
+                                <div class="am-u-sm-9 am-u-sm-offset-3">
+                                    <button type="button" class="am-btn am-btn-default" v-on:click="UploadFileBtnFun">
+                                        <i class="am-icon-external-link"></i>
+                                        &nbsp;&nbsp;&nbsp;下&nbsp;&nbsp;发&nbsp;&nbsp;&nbsp;
+                                    </button>
+                                    <button type="button" class="am-btn am-btn-success" v-on:click="SMSReminderFun">
+                                        <i class="am-icon-envelope-o"></i>
+                                        &nbsp;&nbsp;&nbsp;短 信 提 醒&nbsp;&nbsp;&nbsp;
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <!-- 短信提示下的省市加载 -->
+        <div id="Areas-PopWrapper" class="am-tab-panel popmodelpanel" style="width:100%;height:auto;margin-top:20px;" v-show="ShowViews">
+            <div class="Btn-wrapper">
+                <div class="am-g">
+                    <div class="am-u-sm-2">
+                        <button class="am-btn am-btn-secondary" type="button" v-on:click="SendSMSFun">
+                            <i class="am-icon-plus"></i>
+                            发 送 短 信
+                        </button>
+                    </div>
+                    <div class="am-u-sm-8"></div>
+                </div>
+            </div>
+            <!-- 仅占位置 -->
+            <div class="split"></div>
+            <div class="am-g">
+                <div class="am-u-sm-12">
+                    <table class="am-table am-table-striped am-table-hover table-main">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" v-model="CheckedAll" />
+                                </th>
+                                <th>机构代码</th>
+                                <th>省市</th>
+                                <th>短信提醒人</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in SMSProvincesListsData" v-bind:id="item.AreaID">
+                                <td><input type="checkbox" lay-skin="primary" v-model="item.CheckItem" /></td>
+                                <td>{{item.AreaCode}}</td>
+                                <td>{{item.AreaName}}</td>
+                                <td>{{item.smsper}}</td>
+                                <td>
+                                    <div class="am-btn-toolbar">
+                                        <div class="am-btn-group am-btn-group-xs">
+                                            <button class="am-btn am-btn-default am-btn-xs am-text-secondary" v-on:click="EditSMSDesignatedPersonFun(item.AreaCode)">
+                                                <i class="am-icon-pencil-square-o"></i>
+                                                编 辑
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- 指定机构发送短信 -->
+        <div id="SendSMS-PopWrapper" class="am-tab-panel popmodelpanel" style="width:100%;height:auto;margin-top:20px;" v-show="ShowViews">
+            <form class="am-form am-form-horizontal">
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <div class="am-form-group">
+                            <label class="am-u-sm-2 am-form-label am-text-danger" for="doc-ipt-3-a">手机号码:</label>
+                            <div class="am-u-sm-10">
+                                <textarea class="" rows="5" id="doc-ta-1" v-bind:value="telNums" v-model="telNums" style="resize: none;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <div class="am-form-group">
+                            <label class="am-u-sm-2 am-form-label am-text-danger" for="doc-ipt-3">内容:</label>
+                            <div class="am-u-sm-10">
+                                <textarea class="" rows="5" id="doc-ta-1" v-bind:value="SendMessage" v-model="SendMessage" style="resize: none;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- 人员信息绑定管理 -->
+        <div id="PersonnelBindSMS-PopWrapper" class="am-tab-panel popmodelpanel" style="width:100%;height:auto;margin-top:20px;" v-show="ShowViews">
+            <div class="am-g">
+                <div class="am-u-sm-12">
+                    <div class="am-tabs" data-am-tabs>
+                        <ul class="am-tabs-nav am-nav am-nav-tabs">
+                            <li class="am-active"><a href="#tab1">短信提醒人</a></li>
+                            <li><a href="#tab2">添加短信提醒人</a></li>
+                        </ul>
+                        <div class="am-tabs-bd">
+                            <div class="am-tab-panel am-fade am-in am-active" id="tab1">
+                                <!-- 仅占位置 -->
+                                <div class="split"></div>
+                                <div class="Job-wrapper">
+                                    <label class="am-u-sm-2 am-form-label am-text-default labelFormat" style="line-height: 32px;">岗位</label>
+                                    <div class="am-u-sm-7 laiqHeight">
+                                        <laiq-select multiple valuekey="id" labelkey="text" btnwidth="100%" maxheight="155" v-bind:model="GetStationListsData1" v-model="SelectedGetStation1" placeholder="可多选人员"></laiq-select>
+                                    </div>
+                                    <div class="am-u-sm-3">
+                                        <div class="am-form-group">
+                                            <button type="button" class="am-btn am-btn-secondary am-btn-sm" v-on:click="RemoveSearchSMSAlertsFun" style="height: 32px;">
+                                                <i class="am-icon-search"></i>
+                                                查 询
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="am-g">
+                                    <div class="am-u-sm-12">
+                                        <div class="am-input-group am-input-group-sm">
+                                            <span class="am-input-group-btn">
+                                                <button class="am-btn am-btn-danger" type="button" v-on:click="RemoveBindSMSPeopleFun">
+                                                    <i class="am-icon-trash-o"></i>
+                                                    删 除 已 添 加 人 员
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 仅占位置 -->
+                                <div class="split"></div>
+                                <div class="am-g">
+                                    <div class="am-u-sm-12">
+                                        <table class="am-table am-table-striped am-table-hover table-main">
+                                            <thead>
+                                                <tr>
+                                                    <th>
+                                                        <input type="checkbox" v-model="SelectedAll1" />
+                                                    </th>
+                                                    <th>姓名</th>
+                                                    <th>地区</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="item in DeleMsgListsData" v-bind:id="item.CustomerID">
+                                                    <td><input type="checkbox" v-model="item.SelectedItem1" /></td>
+                                                    <td>{{item.Username}}</td>
+                                                    <td>{{item.AreaName}}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="am-tab-panel am-fade" id="tab2">
+                                <!-- 仅占位置 -->
+                                <div class="split"></div>
+                                <div class="Job-wrapper">
+                                    <label class="am-u-sm-2 am-form-label am-text-default labelFormat" style="line-height: 32px;">岗位</label>
+                                    <div class="am-u-sm-7 laiqHeight">
+                                        <laiq-select multiple valuekey="id" labelkey="text" btnwidth="100%" maxheight="155" v-bind:model="GetStationListsData2" v-model="SelectedGetStation2" placeholder="可多选人员" style="height: 32px;"></laiq-select>
+
+                                    </div>
+                                    <div class="am-u-sm-3">
+                                        <div class="am-form-group">
+                                            <button type="button" class="am-btn am-btn-secondary am-btn-sm" v-on:click="AddSearchSMSAlertsFun" style="height: 32px;">
+                                                <i class="am-icon-search"></i>
+                                                查 询
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="am-g">
+                                    <div class="am-u-sm-12">
+                                        <div class="am-input-group am-input-group-sm">
+                                            <span class="am-input-group-btn">
+                                                <button class="am-btn am-btn-secondary" type="button" v-on:click="AddBindSMSPeopleFun">
+                                                    <i class="am-icon-plus"></i>
+                                                    添 加 人 员
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- 仅占位置 -->
+                                <div class="split"></div>
+                                <div class="am-g">
+                                    <div class="am-u-sm-12">
+                                        <table class="am-table am-table-striped am-table-hover table-main">
+                                            <thead>
+                                                <tr>
+                                                    <th>
+                                                        <input type="checkbox" v-model="SelectedAll2" />
+                                                    </th>
+                                                    <th>姓名</th>
+                                                    <th>地区</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="item in AddMsgListsData" v-bind:id="item.CustomerID">
+                                                    <td><input type="checkbox" v-model="item.SelectedItem2" /></td>
+                                                    <td>{{item.Username}}</td>
+                                                    <td>{{item.AreaName}}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Content/vue/laiqui/laiqui.min.js"></script>
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            // 短信提醒下第一次点击后弹出的全选
+            CheckedAll: function () {
+                var _this = this;
+                for (var i = 0; i < _this.SMSProvincesListsData.length; i++) {
+                    _this.SMSProvincesListsData[i].CheckItem = _this.CheckedAll;
+                }
+            },
+            // 编辑下的短信提醒人的全选
+            SelectedAll1: function () {
+                var _this = this;
+                for (var i = 0; i < _this.DeleMsgListsData.length; i++) {
+                    _this.DeleMsgListsData[i].SelectedItem1 = _this.SelectedAll1;
+                }
+            },
+            // 编辑下的添加短信提醒人的全选
+            SelectedAll2: function () {
+                var _this = this;
+                for (var i = 0; i < _this.AddMsgListsData.length; i++) {
+                    _this.AddMsgListsData[i].SelectedItem2 = _this.SelectedAll2;
+                }
+            },
+            // 短信提醒人下的岗位多项选择获取ID集合
+            SelectedGetStation1: function (val, oldVal) {
+                var _this = this;
+                _this.SelectedGetStation1 = val;
+            },
+            // 添加短信提醒人下的岗位多项选择获取ID集合
+            SelectedGetStation2: function (val, oldVal) {
+                var _this = this;
+                _this.SelectedGetStation2 = val;
+            }
+        },
+        data: function () {
+            return {
+                fileName: '',
+                SendAdmin: '',
+                uid: '',
+                token: '',
+                ShowViews: false, // 判断是否显示
+                telNums: '', // 短信发送下的手机号码
+                SendMessage: '', // 短信发送下的内容
+                str: '',
+                smstype: 0, //0 下发 1 校验
+                SMSProvincesListsData: [], // 短信省市列表数据
+                CheckedAll: false, // 全选
+                CheckedAllIdArry: [], // 全选为true的数据
+                GetStationListsData1: [], // 短信提醒人下的获取人员绑定的信息列表集合 
+                GetStationListsData2: [], // 添加短信提醒人下的获取人员绑定的信息列表集合 
+                SelectedGetStation1: [], // 短信提醒人 对应的值 单选为number  多选为Array
+                SelectedGetStation2: [], // 添加短信提醒人 对应的值 单选为number  多选为Array
+                SelectedAll1: false, // 短信提醒人
+                SelectedAll2: false, // 添加短信提醒人
+                DeleMsgAllIdArry: [], // 短信提醒人
+                AddMsgAllIdArry: [], // 添加短信提醒人
+                DeleMsgListsData: [], // 待删除人员信息列表数据
+                AddMsgListsData: [], // 添加人员信息列表
+                EditId: '' // 用于存储编辑下的短信提醒人的Id
+            }
+        },
+        methods: {
+            // 点击选择文件上传按钮
+            UploaderFilesNameFun: function () {
+                var _this = this;
+                $('#doc-form-file').on('change', function() {
+                    $.each(this.files, function() {
+                        _this.fileName =  this.name;
+                    });
+                });
+            },
+            // 点击下发按钮
+            UploadFileBtnFun: function () {
+                var _this = this;
+                if(_this.fileName == ''){
+                    $.post("/datacheck/dc_upload/isC", {
+                        uid: _this.uid,
+                        token: _this.token,
+                        filenames: _this.fileName
+                    }, function (data) {
+                        if(data.success == false){
+                            layer.alert(data.Msg, {
+                                icon: 5,
+                                title: '提示',
+                                skin: 'layer-ext-moon'
+                            })
+                        }
+                    },'json');
+                }else{
+                    layer.confirm('您确定要上传此文件？', {
+                        icon: 3,
+                        title: '上传文件',
+                        btn: ['确 定', '取 消'] //按钮
+                    }, function () {
+                        $.post('/datacheck/dc_upload/isC', {
+                            uid: _this.uid,
+                            token: _this.token,
+                            filenames: _this.fileName
+                        }, function (data) {
+                            if (data.success) {
+                                // layer.closeAll();
+                                // alert(data.Msg)
+                                layer.alert(data.Msg, {
+                                    icon: 5,
+                                    title: '提示',
+                                    skin: 'layer-ext-moon'
+                                })
+                            }else{
+                                layer.alert(data.Msg, {
+                                    icon: 5,
+                                    title: '提示',
+                                    skin: 'layer-ext-moon'
+                                })
+                            }
+                        }, "json");
+                    }, function () {
+                        return;
+                    });
+                }
+            },
+            // 短信发送下的机构代码，省市等列表数据加载
+            SMSAreasListsFun: function () {
+                var _this = this;
+                $.post("/datacheck/dc_write/sms_list", {
+                    page: 1,
+                    start: 0,
+                    limit: 10
+                }, function (data) {
+                    if(data.success){
+                        _this.SMSProvincesListsData = data.data;
+                        // 为每个对象设置是否选中
+                        for (var i = 0; i < _this.SMSProvincesListsData.length; i++) {
+                            _this.SMSProvincesListsData[i].CheckItem = false;
+                        }
+                    }
+                }, "json");
+            },
+            // 短信提醒按钮点击事件
+            SMSReminderFun: function () {
+                var _this = this;
+                layer.open({
+                    type: 1,
+                    title: '短信发送',
+                    shade: 0.8,
+                    move: false,
+                    // btn: ['确定', '取消'],
+                    area: ['800px', '550px'], //宽高
+                    content: $("#Areas-PopWrapper")
+                    // ,
+                    // yes: function (index, layero) {}
+                    
+                });
+            },
+            // 编辑短信指定人数据加载以及模态框的打开
+            EditSMSDesignatedPersonFun: function (EditId) {
+                var _this = this;
+                _this.EditId = EditId;
+                // 获取短信提醒人以及添加短信提醒人下的岗位数据列表
+                _this.GetStationFun();
+
+                // 短信提醒人下的列表数据
+                _this.GetSendPersonListarFun();
+
+                // 添加短信提醒人下列表数据加载方法
+                _this.GetSendPersonListFun();
+                
+                // 弹出短信提醒人以及添加短信提醒人模态框
+                layer.open({
+                    type: 1,
+                    title: '人员信息绑定管理',
+                    shade: 0.8,
+                    move: false,
+                    // btn: ['确定', '取消'],
+                    area: ['800px', '550px'], //宽高
+                    content: $("#PersonnelBindSMS-PopWrapper")
+                    ,
+                    // yes: function (index, layero) {
+
+                    // },
+                    cancel: function(index1, layero){ 
+                        // 当关闭人员信息绑定管理弹窗后，从新加载短信发送下的机构代码，省市等列表数据加载
+                        _this.SMSAreasListsFun();
+                        
+                    }
+                });
+            },
+            // 获取短信提醒人以及添加短信提醒人下的岗位数据列表
+            GetStationFun: function () {
+                var _this = this;
+                $.post("/datacheck/dc_write/getStation", {
+                    page: 1,
+                    start: 0,
+                    limit: 25
+                }, function (data) {
+                    // 短信提醒人下的岗位数据
+                    _this.GetStationListsData1 = data;
+                    // 添加短信提醒人下的岗位数据
+                    _this.GetStationListsData2 = data;
+                },'json');
+            },
+            // 短信提醒人下的列表数据
+            GetSendPersonListarFun: function () {
+                var _this = this;
+                $.post("/datacheck/dc_write/sendPersonList_ar", {
+                    page: 1,
+                    start: 0,
+                    limit: 60,
+                    AreaID_S: _this.EditId
+                }, function (data) {
+                    if(data.success){
+                        _this.DeleMsgListsData = data.data;
+                        // 数量大于0的时候才会给每一个设置SelectedItem1属性
+                        if(data.total > 0){
+                            // 为每个对象设置是否选中，属性SelectedItem1
+                            for(var i = 0;i < _this.DeleMsgListsData.length;i++){
+                                _this.DeleMsgListsData[i].SelectedItem1 = false;
+                            }
+                        }
+                    }
+                },'json');
+            },
+            // 添加短信提醒人下列表数据
+            GetSendPersonListFun: function () {
+                var _this = this;
+                $.post("/datacheck/dc_write/sendPersonList", {
+                    page: 1,
+                    start: 0,
+                    limit: 15,
+                    AreaID_S: _this.EditId
+                }, function (data) {
+                    if(data.success){
+                        _this.AddMsgListsData = data.data;
+                        // 数量大于0的时候才会给每一个设置SelectedItem1属性
+                        if(data.total > 0){
+                            // 为每个对象设置是否选中，属性SelectedItem2
+                            for(var i = 0;i < _this.AddMsgListsData.length;i++){
+                                _this.AddMsgListsData[i].SelectedItem2 = false;
+                            }
+                        }
+                    }
+                },'json');
+            },
+            // 短信提醒人下的删除已添加人员
+            RemoveBindSMSPeopleFun: function () {
+                var _this = this;
+                var DeleMsgNum = 0;// 选中的数量
+                _this.DeleMsgAllIdArry = [];
+                // 判断当前无列表数据的前提下，点击删除按钮后弹出提示
+                if(_this.DeleMsgListsData == null){
+                    layer.alert("当前暂无数据，不可进行此操作！", {
+                        icon: 5,
+                        title: '提示',
+                        skin: 'layer-ext-moon'
+                    });
+                    return;
+                }
+                // 在有列表数据的前提下，对每个选中的数据push到_this.DeleMsgAllIdArry数组中，DeleMsgNum用作判断选中个数
+                for (var i = 0; i < _this.DeleMsgListsData.length; i++) {
+                    if (_this.DeleMsgListsData[i].SelectedItem1 == true) {
+                        DeleMsgNum++;
+                        _this.DeleMsgAllIdArry.push(_this.DeleMsgListsData[i]);// 将选中的用户的id存入CheckedAllIdArry数组
+                    }
+                };
+                var JsonDataDeleMsgAll = JSON.stringify(_this.DeleMsgAllIdArry);//将json对象转换成json字符串数组
+                if(DeleMsgNum >= 1){
+                    var index = layer.confirm('确定删除该考试下已绑定的消息发送人员？', {
+                        icon: 3,
+                        title: '删除考试下已绑定的消息发送人员',
+                        btn: ['确 定', '取 消'] //按钮
+                    }, function () {
+                        $.post('/datacheck/dc_write/sendPerson_del', {
+                            AreaID_S: _this.EditId,
+                            data: JsonDataDeleMsgAll
+                        }, function (data) {
+                            if (data.success) {
+                                //此时你只需要把获得的index，轻轻地赋予layer.close即可
+                                layer.close(index); 
+                                alert(data.Msg)
+                                // 短信提醒人下的列表数据加载函数
+                                _this.GetSendPersonListarFun();
+                                // 添加短信提醒人下列表数据加载函数
+                                _this.GetSendPersonListFun();
+                            }
+                        }, "json");
+                    }, function () {
+                        return;
+                    });
+                }else{
+                    layer.alert("请选择要删除的已绑定的消息发送人员。", {
+                        icon: 5,
+                        title: '提示',
+                        skin: 'layer-ext-moon'
+                    });
+                }
+            },
+            // 添加短信提醒人下的添加到待添加人员
+            AddBindSMSPeopleFun: function () {
+                var _this = this;
+                var AddMsgNum = 0;// 选中的数量
+                _this.AddMsgAllIdArry = [];
+                // 判断当前无列表数据的前提下，点击添加人员按钮后弹出提示
+                if(_this.AddMsgListsData == null){
+                    layer.alert("当前暂无数据，不可进行此操作！", {
+                        icon: 5,
+                        title: '提示',
+                        skin: 'layer-ext-moon'
+                    });
+                    return;
+                }
+                // 在有列表数据的前提下，对每个选中的数据push到_this.AddMsgAllIdArry数组中，AddMsgNum用作判断选中个数
+                for (var i = 0; i < _this.AddMsgListsData.length; i++) {
+                    if (_this.AddMsgListsData[i].SelectedItem2 == true) {
+                        AddMsgNum++;
+                        _this.AddMsgAllIdArry.push(_this.AddMsgListsData[i]);// 将选中的用户的id存入CheckedAllIdArry数组
+                    }
+                }
+                var JsonDataAddMsgAll = JSON.stringify(_this.AddMsgAllIdArry);//将json对象转换成json字符串数组
+                if(AddMsgNum >= 1){
+                    var index = layer.confirm('确定添加人员？', {
+                        icon: 3,
+                        title: '追加绑定人员',
+                        btn: ['确 定', '取 消'] //按钮
+                    }, function () {
+                        $.post('/datacheck/dc_write/sendPerson_Insert', {
+                            uid: '',
+                            token: '',
+                            data: JsonDataAddMsgAll,
+                            status: '',
+                            ksid: ''
+                        }, function (data) {
+                            if (data.success) {
+                                //此时你只需要把获得的index，轻轻地赋予layer.close即可
+                                layer.close(index); 
+                                alert(data.Msg)
+                                // 短信提醒人下的列表数据加载函数
+                                _this.GetSendPersonListarFun();
+                                // 添加短信提醒人下列表数据加载函数
+                                _this.GetSendPersonListFun();
+                            }
+                        }, "json");
+                    }, function () {
+                        return;
+                    });
+                }else{
+                    layer.alert("请选择要删除的已绑定的消息发送人员。", {
+                        icon: 5,
+                        title: '提示',
+                        skin: 'layer-ext-moon'
+                    })
+                }
+            },
+            // 短信提醒人下的搜索
+            RemoveSearchSMSAlertsFun: function () {
+                var _this = this;
+                // 把数组中的所有元素放入一个字符串
+                var StationString1 = _this.SelectedGetStation1.join(",");
+                $.post("/datacheck/dc_write/sendPersonList_ar", {
+                    page: 1,
+                    start: 0,
+                    limit: 60,
+                    AreaID_S: _this.EditId,
+                    station: StationString1
+                }, function (data) {
+                    if(data.success){
+                        _this.DeleMsgListsData = data.data;
+                        // 数量大于0的时候才会给每一个设置SelectedItem1属性
+                        if(data.total > 0){
+                            // 为每个对象设置是否选中，属性SelectedItem1
+                            for(var i = 0;i < _this.DeleMsgListsData.length;i++){
+                                _this.DeleMsgListsData[i].SelectedItem1 = false;
+                            }
+                        }
+                    }
+                },'json');
+            },
+            // 添加短信提醒人下的搜索
+            AddSearchSMSAlertsFun: function () {
+                var _this = this;
+                // 把数组中的所有元素放入一个字符串
+                var StationString2 = _this.SelectedGetStation2.join(",");
+                $.post("/datacheck/dc_write/sendPersonList", {
+                    page: 1,
+                    start: 0,
+                    limit: 15,
+                    AreaID_S: _this.EditId,
+                    station: StationString2
+                }, function (data) {
+                    if(data.success){
+                        _this.AddMsgListsData = data.data;
+                        // 数量大于0的时候才会给每一个设置SelectedItem1属性
+                        if(data.total > 0){
+                            // 为每个对象设置是否选中，属性SelectedItem2
+                            for(var i = 0;i < _this.AddMsgListsData.length;i++){
+                                _this.AddMsgListsData[i].SelectedItem2 = false;
+                            }
+                        }
+                    }
+                },'json');
+            },
+            // 指定机构发送短信
+            SendSMSFun: function () {
+                var _this = this;
+                var CheckedAllNum = 0;// 选中的数量
+                var SelrecArry = []; // 用于存储发送短信人员电话存储
+                var bc = [];
+                _this.CheckedAllIdArry = [];
+                // 判断当前无列表数据的前提下，点击删除按钮后弹出提示
+                if(_this.SMSProvincesListsData == null){
+                    layer.alert("当前暂无数据，不可进行此操作！", {
+                        icon: 5,
+                        title: '提示',
+                        skin: 'layer-ext-moon'
+                    });
+                    return;
+                }
+                // 在有列表数据的前提下，对每个选中的数据push到_this.CheckedAllIdArry数组中，CheckedAllNum用作判断选中个数
+                for (var i = 0; i < _this.SMSProvincesListsData.length; i++) {
+                    if (_this.SMSProvincesListsData[i].CheckItem == true) {
+                        CheckedAllNum++;
+                        // 将选中的用户的id存入CheckedAllIdArry数组
+                        _this.CheckedAllIdArry.push(_this.SMSProvincesListsData[i]);
+                        SelrecArry.push(_this.SMSProvincesListsData[i].smsper[0])
+                    }
+                }
+                // 判断当前电话号码的个数
+                if (SelrecArry[0] !== undefined){
+                    //截取手机号码 作为ID 
+                    for (var i = 0; i < SelrecArry.length; i++) {
+                        var a = SelrecArry[i];
+                        var bi = a.indexOf('(');
+                        if (bi != -1) {
+                            var ei = a.indexOf(')');
+                            var len = ei - bi;
+                            var b = a.substring(bi + 1, ei);
+                            if (b.length > 0) {
+                                bc.push(b);
+                            }
+                        }
+                    }
+                    // 数组转换成字符串
+                    _this.telNums = bc.join(",");
+                }
+                
+                // 短信发送下的信息内容
+                if (_this.smstype == 0) {
+                    _this.SendMessage = "【" + _this.str + "】" + "校验文件已下发,请登录考务通下载。";
+                } else {
+                    _this.SendMessage = "校验结果未上传,请登录考务通尽快上传【" + _this.str + "】" + "校验结果。";
+                }
+
+                // 判断选中个数
+                if(CheckedAllNum >= 1){
+                    var index = layer.open({
+                        type: 1,
+                        title: '短信发送',
+                        shade: 0.8,
+                        move: false,
+                        btn: ['发送', '取消'],
+                        area: ['600px', '360px'], //宽高
+                        content: $("#SendSMS-PopWrapper"),
+                        yes: function (index, layero) {
+                            // 如果短信发送的电话号码为空则不能继续执行此操作
+                            if(_this.telNums == null || _this.telNums == '') {
+                                layer.alert("待发送信息的电话号码不能为空", {
+                                    icon: 5,
+                                    title: '提示',
+                                    skin: 'layer-ext-moon'
+                                })
+                                return;
+                            }
+                            // 正则判定电话号码是否正确
+                            if(!(/^0?(13|14|15|18)[0-9]{9}/.test(_this.telNums))){
+                                layer.alert("待发送信息的电话号码不正确", {
+                                    icon: 5,
+                                    title: '提示',
+                                    skin: 'layer-ext-moon'
+                                })
+                                return;
+                            }
+                            // 如果短信发送的内容为空则不能继续执行此操作
+                            if(_this.SendMessage == null || _this.SendMessage == '') {
+                                layer.alert("待发送信息的内容不能为空", {
+                                    icon: 5,
+                                    title: '提示',
+                                    skin: 'layer-ext-moon'
+                                })
+                                return;
+                            }
+                            $.ajax({
+                                url: '/datacheck/dc_write/SendMsg',
+                                data: {
+                                    uid: '',
+                                    token: '',
+                                    areas: '',
+                                    tel: _this.telNums,
+                                    msg: _this.SendMessage
+                                },
+                                type: 'post',
+                                dataType: 'json',
+                                success: function (data) {
+                                    if (data.success == true) {
+                                        alert(data.Msg);
+                                        layer.close(index);
+                                    } else {
+                                        alert(data.Msg);
+                                        layer.close(index);
+                                    }
+                                }
+                            })
+                        }
+                    });
+                }else{
+                    layer.alert("请至少选择一条短信发送机构！", {
+                        icon: 5,
+                        title: '提示',
+                        skin: 'layer-ext-moon'
+                    })
+                }
+            }
+        },
+        mounted: function () {
+            var _this = this;
+            _this.SMSAreasListsFun();
+            // 选择文件
+            _this.UploaderFilesNameFun();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "下发校验文件"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

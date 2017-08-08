@@ -1,0 +1,416 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>黑名单</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <style type="text/css">
+        html, body {
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+
+        .am-tabs-bd {
+            border-bottom: 0px;
+            border-right: 0px;
+            border-left: 0px;
+        }
+
+        .selectedHight .am-btn {
+            padding: 0.65em 1em;
+        }
+
+        #selected2 .am-btn {
+            padding: 0.65em 1em;
+        }
+
+        .selectedHight .am-btn-default {
+            border-color: #ccc;
+        }
+
+        .selectedHight input {
+            max-width: 75%;
+            display: inline-block;
+        }
+
+        #doc-modal-1 .am-modal-hd {
+            text-align: left;
+            padding-left: 20px;
+            background: #F8F8F8;
+            border-bottom: 1px solid #eee;
+        }
+
+            #doc-modal-1 .am-modal-hd .am-close {
+                top: 10px;
+            }
+
+        #doc-modal-1 .am-modal-bd {
+            background: #fff;
+        }
+
+        #doc-modal-1 .am-modal-dialog {
+            width: 700px;
+        }
+
+        #doc-modal-2 .am-modal-dialog {
+            width: 750px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 3px 3px rgba(0,0,0,0.1);
+        }
+
+        .checkpop-title-wrapper > div {
+            padding: 30px;
+        }
+
+            .checkpop-title-wrapper > div:first-child {
+                padding-bottom: 0px;
+            }
+
+        .am-sm-title {
+            display: inline-block;
+            width: 100px;
+            height: 32px;
+            line-height: 32px;
+            text-align: right;
+            float: left;
+        }
+
+        .SMSContent textarea {
+            width: 500px;
+            height: 80px;
+            float: right;
+        }
+
+        .floatRTBox {
+            float: right;
+            width: 500px;
+            height: auto;
+            float: right;
+        }
+
+        .am-sm-input {
+            width: 160px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">短信平台</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 表单输入框 -->
+        <div class="am-g">
+            <div class="am-u-sm-2 selectedHight">
+                <span style="line-height: 32px;">地区:</span>
+                <laiq-select-tree labelkey="text" valuekey="id" v-model="treeid" v-bind:model="GridTreeListsData" maxheight="155"></laiq-select-tree>
+            </div>
+            <div class="am-u-sm-2 selectedHight">
+                <span style="display:inline-block;line-height: 32px;">手机号:</span>
+                <input type="text" class="am-form-field" placeholder="待查询条件" v-model="txtPhone">
+            </div>
+            <div class="am-u-sm-2">
+                <div class="am-input-group am-input-group-sm">
+                    <span class="am-input-group-btn">
+                        <button class="am-btn am-btn-default" type="button" v-on:click="getList">
+                            <i class="am-icon-search"></i>
+                            &nbsp;&nbsp;查&nbsp;&nbsp;&nbsp;询&nbsp;&nbsp;
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <div class="am-u-sm-6"></div>
+        </div>
+        <!-- 占位置 -->
+        <div class="split" style="width: 100%;height: 20px;background: #fff;"></div>
+        <!-- 黑名单添加 -->
+        <div class="am-g">
+            <div class="am-u-sm-2">
+                <div class="am-input-group am-input-group-sm">
+                    <span style="line-height: 32px;">黑名单导入:</span>
+                    <span class="am-input-group-btn">
+                        <button class="am-btn am-btn-secondary" type="button" v-on:click="layerOpen(1, 1);">
+                            <i class="am-icon-plus"></i>
+                            手 动 添 加
+                        </button>
+                    </span>
+                    <span class="am-input-group-btn">
+                        <button class="am-btn am-btn-success" type="button" v-on:click="layerOpen(2, 2);">
+                            <i class="am-icon-cloud-upload"></i>
+                            TXT 导 入
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <div class="am-u-sm-6"></div>
+        </div>
+        <!-- 占位置 -->
+        <div class="split" style="width: 100%;height: 20px;background: #fff;"></div>
+        <!-- dataGrid -->
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <table class="am-table am-table-striped am-table-hover table-main">
+                    <thead>
+                        <tr>
+                            <th style="width:33%">手机号</th>
+                            <th style="width:33%">添加时间</th>
+                            <th style="width:33%">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in GridListsData" v-bind:value="item.Id">
+                            <td style="width:33%">{{item.Phone}}</td>
+                            <td style="width:33%">{{item.AddTime}}</td>
+                            <td style="width:33%">
+                                <div class="am-btn-toolbar">
+                                    <div class="am-btn-group am-btn-group-xs">
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-danger" v-on:click="CheckView(item.Id,item.msg)">
+                                            <i class="am-icon-trash"></i>
+                                            删除此手机号码
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @* 分页设置 *@
+        <div class="am-tab-panel">
+            <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;">
+                <div class="am-u-sm-12">
+                    共 <span v-text="totle"></span> 条记录
+                    <div class="am-fr">
+                        <div id="page"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Scripts/vue/laiqui.min.js"></script>
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            thisId: function (val, oldVal) {
+                var _this = this;
+                _this.selectedOption = val;
+                _this.PopCheckView(_this.ID);
+            }
+        },
+        data: function () {
+            return {
+                pageTitle: '',
+                GridListsData: [],
+                GridTreeListsData: [],
+                selectedType: '',
+                txtPhone: '',
+                totle: 0,
+                count: 0,
+                treeid: 'root'
+            }
+        },
+        watch: {
+            treeid: function (val, oldVal) {
+                var _this = this;
+                _this.treeid = val;
+                _this.GetTreeLists(_this.treeid);
+                _this.getList(_this.treeid);
+            }
+        },
+        methods: {
+            // 发送记录列表加载
+            getList: function (treeid) {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/sms/Blacklist/setList", { page: 1, start: 0, limit: 10, phone: _this.txtPhone, key: _this.treeid }, function (data) {
+                    _this.GridListsData = data.data;
+                    _this.totle = data.total;
+                    _this.count = Math.ceil(_this.totle / 10);
+                    if (_this.count > 1) {
+                        $("#page").show();
+                        laypage({
+                            cont: "page", pages: _this.count, groups: 5, skin: "#1E9FFF", jump: function (obj, first) {
+                                if (!first) {
+                                    $.post("/sms/Blacklist/setList", { page: obj.curr, start: 0, limit: 10, phone: _this.txtPhone, key: _this.treeid }, function (data) {
+                                        _this.GridListsData = data.data;
+                                        _this.count = data.total;
+                                    }, "json");
+                                }
+                            }
+                        });
+                    } else {
+                        // 小于1页或者没有数据的情况下不显示分页
+                        $("#page").hide();
+                    }
+                    layer.closeAll();
+                }, "json");
+            },
+            // 下拉树型结构加载
+            GetTreeLists: function (treeid) {
+                var _this = this;
+                $.post("/sms/SmsHome/ListByTree", { page: 1, start: 0, limit: 10, node: _this.treeid, filter: "[{ property: 'AreaId', value: 864 }]", id: _this.treeid }, function (data) {
+                    _this.GridTreeListsData = data;
+                }, "json");
+            },
+            // 删除电话号码
+            RemovePhoneNum: function (id) {
+                var _this = this;
+                layer.confirm('确定要删除吗？', {
+                    btn: ['确定', '取消'], //按钮
+                    title: false, closeBtn: false
+                }, function (index) {
+                    $.post("/Sms/Blacklist/Del", { "id": id }, function () {
+                        alert("删除成功。");
+                        layer.close(id);
+                        _this.getList();
+                    })
+
+                }, function () {
+                    // 取消按钮加载部分
+                });
+            },
+            // 手动添加或者txt导入
+            layerOpen: function (iswhat, tb) {
+                var _this = this;
+                var tit;
+                if (iswhat == 1) {
+                    tit = "黑名单添加-手动添加";
+                } else {
+                    tit = "黑名单添加-TXT导入"
+                };
+                layer.open({
+                    type: 2,
+                    title: tit,
+                    shadeClose: true,
+                    shade: 0.8,
+                    area: ['620px', '550px'],
+                    btn: ['添加', '取消'],
+                    content: '/Sms/Blacklist/Add?isWhat=' + iswhat,
+                    yes: function (index, layero) {
+                        var body = layer.getChildFrame('body', index);
+
+                        var calls = $(body).find("textarea[name=textarea1]").val().split(',');
+                        var calls_y = new Array(), calls_n = new Array();
+                        calls = unique(calls);
+                        var reg = /^0?1[3|4|5|8][0-9]\d{8}$/;
+                        for (var i = 0; i < calls.length; i++) {
+                            if (calls[i] == '' || calls[i] == null) {
+                                continue;
+                            }
+                            if (reg.test(calls[i])) {
+                                calls_y.push(calls[i]);
+                            } else {
+                                calls_n.push(calls[i]);
+                            };
+                        }
+                        if (calls_y.length <= 0) {
+                            if (calls_n <= 0) {
+                                alert("未导入任何数据。");
+                            } else {
+                                alert("数据有误，请检查。");
+                            }
+                            return false;
+                        }
+                        var data = { "calls": calls_y.join(",") };
+                        $.post("/Sms/Blacklist/Add_sub", data, function (data) {
+                            var alertStr = "数据导入成功，成功导入" + data.AddNum + "个手机号。";
+                            alert(alertStr);
+                            tb.moveFirst();
+                            layer.close(index);
+                        }, "json");
+                    }
+                });
+            },
+            // 初始化
+            initSelectDate: function () {
+                var _this = this;
+                // 下拉初始化
+                $('#selected1').selected({ 'btnWidth': '75%', btnSize: 'lg', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.selectedType = $(this).val();
+                });
+            },
+        },
+        mounted: function () {
+            var _this = this;
+            // 下拉树型结构
+            _this.GetTreeLists(_this.treeid);
+            // 发送记录列表调用函数
+            _this.getList(_this.treeid);
+            // 下来框与实践初始化
+            _this.initSelectDate();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "黑名单"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

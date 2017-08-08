@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>充值记录</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <style type="text/css">
+        html, body {
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+
+        .am-tabs-bd {
+            border-bottom: 0px;
+            border-right: 0px;
+            border-left: 0px;
+        }
+
+        .selectedHight .am-btn {
+            padding: 0.41em 1em;
+        }
+
+        #selected1 .am-btn, #selected2 .am-btn {
+            padding: 0.65em 1em;
+        }
+
+        .selectedHight .am-btn-default {
+            border-color: #ccc;
+        }
+
+        .selectedHight input {
+            max-width: 75%;
+            display: inline-block;
+        }
+
+        #doc-modal-1 .am-modal-hd {
+            text-align: left;
+            padding-left: 20px;
+            background: #F8F8F8;
+            border-bottom: 1px solid #eee;
+        }
+
+            #doc-modal-1 .am-modal-hd .am-close {
+                top: 10px;
+            }
+
+        #doc-modal-1 .am-modal-bd {
+            background: #fff;
+        }
+
+        #doc-modal-1 .am-modal-dialog {
+            width: 700px;
+        }
+
+        #doc-modal-2 .am-modal-dialog {
+            width: 750px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 3px 3px rgba(0,0,0,0.1);
+        }
+
+        .checkpop-title-wrapper > div {
+            padding: 30px;
+        }
+
+            .checkpop-title-wrapper > div:first-child {
+                padding-bottom: 0px;
+            }
+
+        .am-sm-title {
+            display: inline-block;
+            width: 100px;
+            height: 32px;
+            line-height: 32px;
+            text-align: right;
+            float: left;
+        }
+
+        .SMSContent textarea {
+            width: 500px;
+            height: 80px;
+            float: right;
+        }
+
+        .floatRTBox {
+            float: right;
+            width: 500px;
+            height: auto;
+            float: right;
+        }
+
+        .am-sm-input {
+            width: 160px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">短信平台</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 表单输入框 -->
+        <div class="am-g">
+            <div class="am-u-sm-2 selectedHight">
+                <span style="line-height: 32px;">地区:</span>
+                <laiq-select-tree id="selected1" labelkey="text" valuekey="id" v-model="root" v-bind:model="ListByTree" maxheight="155"></laiq-select-tree>
+            </div>
+            <div class="am-u-sm-2 selectedHight">
+                <span style="line-height: 32px;">年份:</span>
+                <select id="selected2">
+                    <option v-for="item in GetYearLists" v-bind:value="item.id">{{item.text}}</option>
+                </select>
+            </div>
+            <div class="am-u-sm-2 selectedHight">
+                <span style="line-height: 32px;">是否免费:</span>
+                <select id="selected3">
+                    <option v-for="item in IsFreeLists" v-bind:value="item.value">{{item.label}}</option>
+                </select>
+            </div>
+            <div class="am-u-sm-3"></div>
+        </div>
+        <!-- 占位置 -->
+        <div class="split" style="width: 100%;height: 20px;background: #fff;"></div>
+        <!-- dataGrid -->
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <table class="am-table am-table-striped am-table-hover table-main">
+                    <thead>
+                        <tr>
+                            <th>地区</th>
+                            <th>充值人员</th>
+                            <th>充值条数</th>
+                            <th>充值时间</th>
+                            <th>是否免费</th>
+                            <th>简略</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in GridListsData" v-bind:value="item.Id">
+                            <td>{{item.AreaName}}</td>
+                            <td>{{item.RechargeName}}</td>
+                            <td>{{item.Num}}条</td>
+                            <td>{{item.AddTime}}</td>
+                            <td v-if="item.IsFree==false">不免费</td>
+                            <td v-else>免费</td>
+                            <td>{{item.Msg}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+    @* 分页设置 *@
+    <div style="position:fixed;bottom:0px;left:0px;z-index: 999;width:100%;height:50px;">
+        <div class="am-tabs-bd" style="height: 50px;padding-top: 25px;">
+            <!-- 分页 发送记录列表 -->
+            <div class="am-tab-panel" v-bind:class="{'am-active':ss==1}">
+                <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;">
+                    <div class="am-u-sm-12">
+                        共 <span v-text="totle"></span> 条记录
+                        <div class="am-fr">
+                            <div id="page"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Scripts/vue/laiqui.min.js"></script>
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            thisId: function (val, oldVal) {
+                var _this = this;
+                _this.selectedOption = val;
+                _this.getList(_this.ID);
+            },
+            root: function (val, oldVal) {
+                var _this = this;
+                _this.treeid = val;
+                _this.GetListsByTree(_this.treeid);
+                _this.getList(_this.treeid);
+            }
+        },
+        data: function () {
+            return {
+                ss: 1,
+                Msglength: 15,
+                GridListsData: [],
+                GetYearLists: [],
+                selectedYear: '',
+                selectedIsFree: '',
+                IsFreeLists: [{ value: 0, label: '全部数据' }, { value: 1, label: '免费' }, { value: 2, label: '不免费' }],
+                selectedType: '',
+                thisId: '',
+                totle: 0,
+                count: 0, // 下拉树型结构
+                ListByTree: [],
+                root: 'root',
+                treeid: 864
+            }
+        },
+        methods: {
+            // 发送记录列表加载
+            getList: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/sms/SmsHome/setList", { page: 1, start: 0, limit: 10, key: _this.treeid, keyFree: _this.selectedIsFree, year: _this.selectedYear }, function (data) {
+                    _this.GridListsData = data.data;
+                    _this.totle = data.total;
+                    _this.count = Math.ceil(_this.totle / 10);
+                    if (_this.count > 1) {
+                        $("#page").show();
+                        laypage({
+                            cont: "page", pages: _this.count, groups: 5, skin: "#1E9FFF", jump: function (obj, first) {
+                                if (!first) {
+                                    $.post("/sms/SmsHome/setList", { page: obj.curr, start: 0, limit: 10, key: _this.treeid, keyFree: _this.selectedIsFree, year: _this.selectedYear }, function (data) {
+                                        _this.GridListsData = data.data;
+                                        _this.count = data.total;
+                                    }, "json");
+                                }
+                            }
+                        });
+                    } else {
+                        // 小于1页或者没有数据的情况下不显示分页
+                        $("#page").hide();
+                    }
+                    layer.closeAll();
+                }, "json");
+            },
+            // 下拉树
+            GetListsByTree: function (treeid) {
+                var _this = this;
+                $.post("/sms/SmsHome/ListByTree", { page: 1, start: 0, limit: 10, node: _this.root, filter: "[{ property: 'AreaId', value: 864 }]", id: _this.treeid }, function (data) {
+                    _this.ListByTree = data;
+                }, "json");
+            },
+            // 获取年份
+            GetYears: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/sms/SmsHome/getYear", { page: 1, start: 0, limit: 10, key: 864, keyFree: '', year: '' }, function (data) {
+                    _this.GetYearLists = data;
+                }, "json");
+            },
+            initSelectDate: function () {
+                var _this = this;
+                // 下拉年份初始化
+                $('#selected2').selected({ 'btnWidth': '75%', btnSize: 'lg', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.selectedYear = $(this).val();
+                    _this.getList(_this.selectedYear);
+                });
+                // 下拉是否免费初始化
+                $('#selected3').selected({ 'btnWidth': '75%', btnSize: 'lg', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.selectedIsFree = $(this).val();
+                    _this.getList(_this.selectedYear);
+                });
+            },
+        },
+        mounted: function () {
+            var _this = this;
+            //获取年份下拉
+            _this.GetYears();
+            // 充值记录列表调用函数
+            _this.getList(_this.treeid);
+            //下拉树型结果调用
+            _this.GetListsByTree(_this.treeid);
+            // 下来框与实践初始化
+            _this.initSelectDate();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "充值记录"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

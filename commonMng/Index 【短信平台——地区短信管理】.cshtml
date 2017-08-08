@@ -1,0 +1,427 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>地区短信管理</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <style type="text/css">
+        html, body {
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+
+        .am-tabs-bd {
+            border-bottom: 0px;
+            border-right: 0px;
+            border-left: 0px;
+        }
+
+        .selectedHight .am-btn {
+            padding: 0.41em 1em;
+        }
+
+        #selected1 .am-btn, #selected2 .am-btn {
+            padding: 0.65em 1em;
+        }
+
+        .selectedHight .am-btn-default {
+            border-color: #ccc;
+        }
+
+        .selectedHight input {
+            max-width: 75%;
+            display: inline-block;
+        }
+
+        #doc-modal-1 .am-modal-hd {
+            text-align: left;
+            padding-left: 20px;
+            background: #F8F8F8;
+            border-bottom: 1px solid #eee;
+        }
+
+            #doc-modal-1 .am-modal-hd .am-close {
+                top: 10px;
+            }
+
+        #doc-modal-1 .am-modal-bd {
+            background: #fff;
+        }
+
+        #doc-modal-1 .am-modal-dialog {
+            width: 700px;
+        }
+
+        #doc-modal-2 .am-modal-dialog {
+            width: 750px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 3px 3px rgba(0,0,0,0.1);
+        }
+
+        .checkpop-title-wrapper > div {
+            padding: 30px;
+        }
+
+            .checkpop-title-wrapper > div:first-child {
+                padding-bottom: 0px;
+            }
+
+        .am-sm-title {
+            display: inline-block;
+            width: 100px;
+            height: 32px;
+            line-height: 32px;
+            text-align: right;
+            float: left;
+        }
+
+        .SMSContent textarea {
+            width: 500px;
+            height: 80px;
+            float: right;
+        }
+
+        .floatRTBox {
+            float: right;
+            width: 500px;
+            height: auto;
+            float: right;
+        }
+
+        .am-sm-input {
+            width: 160px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">短信平台</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <div style="width: 100%; padding: .6rem 0rem; background: #ddd;">{{GetAllBalance}}</div>
+                <table class="am-table am-table-striped am-table-hover table-main">
+                    <thead>
+                        <tr>
+                            <th>地区</th>
+                            <th>标识位置</th>
+                            <th>标识文字</th>
+                            <th>已发送条数</th>
+                            <th>剩余条数</th>
+                            <th style="width:30%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in TreeListsData" v-bind:value="item.id">
+                            <td>{{item.text}}</td>
+                            <td>{{item.MarkNum}}</td>
+                            <td>{{item.MarkMsg}}</td>
+                            <td>{{item.SendNum}}</td>
+                            <td>{{item.SurplusNum}}</td>
+                            <td style="width:30%;">
+                                <button class="am-btn am-btn-default am-btn-xs am-text-secondary" v-on:click="PrepaidInfos(item.id)">
+                                    <i class="am-icon-ils"></i>
+                                    短信充值
+                                </button>
+                                <button class="am-btn am-btn-default am-btn-xs am-text-success" v-on:click="InfosSetting(item.id)">
+                                    <i class="am-icon-gear"></i>
+                                    短信设置
+                                </button>
+                                <button class="am-btn am-btn-default am-btn-xs am-text-warning" v-on:click="OtherPrepaid(item.id)">
+                                    <i class="am-icon-gg"></i>
+                                    下属单位充值
+                                </button>
+                                <button v-if="item.leaf==false" class="am-btn am-btn-default am-btn-xs am-text-primary" v-on:click="ShowUnit(item.id,item.text)">
+                                    <i class="am-icon-chevron-down"></i>
+                                    显示下属单位
+                                </button>
+                            </td>
+                        </tr>
+                        <tr v-for="item in UnitTreeListsData" v-bind:value="item.id">
+                            <td>{{item.text}}</td>
+                            <td>{{item.MarkNum}}</td>
+                            <td>{{item.MarkMsg}}</td>
+                            <td>{{item.SendNum}}</td>
+                            <td>{{item.SurplusNum}}</td>
+                            <td style="width:30%;">
+                                <button class="am-btn am-btn-default am-btn-xs am-text-secondary" v-on:click="PrepaidInfos(item.id)">
+                                    <i class="am-icon-ils"></i>
+                                    短信充值
+                                </button>
+                                <button class="am-btn am-btn-default am-btn-xs am-text-success" v-on:click="InfosSetting(item.id)">
+                                    <i class="am-icon-gear"></i>
+                                    短信设置
+                                </button>
+                                <button class="am-btn am-btn-default am-btn-xs am-text-warning" v-on:click="OtherPrepaid(item.id)">
+                                    <i class="am-icon-gg"></i>
+                                    下属单位充值
+                                </button>
+                                <button v-if="item.leaf==false" class="am-btn am-btn-default am-btn-xs am-text-primary" v-on:click="ShowUnit(item.id)">
+                                    <i class="am-icon-chevron-down"></i>
+                                    显示下属单位
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Scripts/vue/laiqui.min.js"></script>
+<script type="text/javascript" src="/Scripts/echarts.min.1.js"></script>
+
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            root: function (val, oldVal) {
+                var _this = this;
+
+            }
+        },
+        data: function () {
+            return {
+                ss: 1,
+                GetAllBalance: '',
+                TreeListsData: [],
+                UnitTreeListsData: []
+            }
+        },
+        methods: {
+            // 获取树型tab数据
+            GetTreeLists: function () {
+                var _this = this;
+                $.post('/sms/SmsHome/treelist', { node: 'root', id: 'root', filter: '[{"property":"AreaId","value":864}]' }, function (data) {
+                    _this.TreeListsData = data;
+                }, 'json');
+            },
+            ShowUnit: function (id) {
+                var _this = this;
+                $.post('/sms/SmsHome/treelist', { node: id, id: id, sort: '[{"property":"leaf","direction":"ASC"}]', filter: '[{"property":"main","value":1}]' }, function (data) {
+                    _this.UnitTreeListsData = data;
+                }, 'json');
+            },
+            // 获取信息提示
+            GetAllInfos: function () {
+                var _this = this;
+                $.post('/sms/smshome/GetAllBalance', { }, function (data) {
+                    _this.GetAllBalance = data.Msg;
+                }, 'json');
+            },
+            // 短信充值
+            PrepaidInfos: function (id, this_name) {
+                var _this = this;
+                //if (cid != 3 && aid != 864) {
+                //    Ext.Msg.alert('错误!', '没有充值的权限。');
+                //    return false;
+                //}
+                //if (aid == this_id && cid != 3) {
+                //    Ext.Msg.alert('错误!', '没有充值的权限。');
+                //    return false;
+                //}
+                layer.open({
+                    type: 2,
+                    title: '充值',
+                    shadeClose: true,
+                    shade: 0.8,
+                    area: ['420px', '250px'],
+                    btn: ['充值', '取消'],
+                    move: false,
+                    yes: function (index, layero) {
+                        //var body = layer.getChildFrame('body', index);
+                        //var val1 = $(body).find("input[name=Recharge]").val();
+                        //var val2 = $(body).find("input[name=Recharge_2]").val();
+                        //var hid_roleid = $(body).find("input[name=hid_roleid]").val();
+                        //var hid_cid = $(body).find("input[name=hid_cid]").val();
+                        //if (val1 != val2) {
+                        //    alert('两次输入的值不一致，请检查。');
+                        //    return false;
+                        //}
+                        //var type = "^[0-9]*[1-9][0-9]*$";
+                        //var re = new RegExp(type);
+                        //if (val1.match(re) == null) {
+                        //    alert('请输入大于零的整数。');
+                        //    return false;
+                        //}
+                        //var isFree = $(body).find("input[name=Free]").is(":checked");
+                        //$.post("/Sms/smshome/RechargeSub", { "val": val1, "roleid": hid_roleid, "cid": hid_cid, "isFree": isFree }, function (data) {
+                        //    alert(data.msg);
+                        //    if (data.isOK) {
+                        //        rec.set("SurplusNum", data.Num);
+                        //        layer.close(index);
+                        //    }
+                        //}, "json")
+
+                    },
+                    content: '/Sms/smshome/Recharge?cid=' + 22 + '&roleid=' + id + '&thisName=' + this_name
+                });
+            },
+            // 短信设置
+            InfosSetting: function (id) {
+                var _this = this;
+                //layer.open({
+                //    type: 2,
+                //    title: '短信设置',
+                //    shadeClose: true,
+                //    shade: 0.8,
+                //    move: false,
+                //    area: ['420px', '220px'],
+                //    btn: ['确定', '取消'],
+                //    yes: function (index, layero) {
+                //        var body = layer.getChildFrame('body', index);
+                //        var Mark = $(body).find("select[name=Mark]").val();
+                //        var MarkMsg = $(body).find("input[name=MarkMsg]").val();
+                //        var hid_roleid = $(body).find("input[name=hid_roleid]").val();
+                //        var hid_cid = $(body).find("input[name=hid_cid]").val();
+                //        $.post("/Sms/smshome/SettingsSub", { "Mark": Mark, "MarkMsg": MarkMsg, "roleid": hid_roleid, "cid": hid_cid }, function (data) {
+                //            if (data.isOK) {
+                //                alert("保存成功。");
+                //                rec.set("MarkNum", data.mark);
+                //                rec.set("MarkMsg", data.MarkMsg);
+                //                layer.close(index);
+                //            }
+                //        }, "json")
+
+                //    },
+                //    content: '/Sms/smshome/Settings?cid=' + cid + '&roleid=' + this_id + '&thisName=' + this_name
+                //});
+            },
+            // 其他下属单位充值
+            OtherPrepaid: function (id) {
+                var _this = this;
+                //if (cid != 3 && aid != 864) {
+                //    Ext.Msg.alert('错误!', '没有充值的权限。');
+                //    return false;
+                //}
+                //if (aid == this_id && cid != 3) {
+                //    Ext.Msg.alert('错误!', '没有充值的权限。');
+                //    return false;
+                //}
+                //layer.open({
+                //    type: 2,
+                //    title: '下属单位充值',
+                //    shadeClose: true,
+                //    shade: 0.8,
+                //    move: false,
+                //    area: ['420px', '500px'],
+                //    btn: ['确定', '取消'],
+                //    content: '/Sms/SmsCompany/Index?cid=' + cid + '&roleid=' + this_id + '&thisName=' + this_name,
+                //    yes: function (index, layero) {
+                //        var body = layer.getChildFrame('body', index);
+                //        var CompanyId = $(body).find("#hid_CompanyId").val();
+                //        if (CompanyId == "") {
+                //            alert('请选择单位。');
+                //            return false;
+                //        }
+                //        var val1 = $(body).find("input[name=Recharge]").val();
+                //        var val2 = $(body).find("input[name=Recharge_2]").val();
+                //        var hid_roleid = $(body).find("input[name=hid_roleid]").val();
+                //        var hid_cid = $(body).find("input[name=hid_cid]").val();
+                //        if (val1 != val2) {
+                //            alert('两次输入的值不一致，请检查。');
+                //            return false;
+                //        }
+                //        var type = "^[0-9]*[1-9][0-9]*$";
+                //        var re = new RegExp(type);
+                //        if (val1.match(re) == null) {
+                //            alert('请输入大于零的整数。');
+                //            return false;
+                //        }
+                //        var isFree = $(body).find("input[name=Free]").is(":checked");
+                //        $.post("/Sms/SmsHome/RechargeSub_Company", { "CompanyId": CompanyId, "val": val1, "roleid": this_id, "cid": cid, "isFree": isFree }, function (data) {
+                //            alert(data.msg);
+                //            if (data.isOK) {
+                //                rec.set("SurplusNum", data.Num);
+                //                layer.close(index);
+                //            }
+                //        }, "json")
+                //    }
+                //});
+            },
+           
+        },
+        mounted: function () {
+            var _this = this;
+            // 调用树型结构函数
+            _this.GetTreeLists();
+            // 获取所有提示信息
+            _this.GetAllInfos();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "地区短信管理"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

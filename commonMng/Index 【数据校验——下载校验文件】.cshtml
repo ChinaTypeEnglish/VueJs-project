@@ -1,0 +1,384 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>下载校验文件</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <link href="@(Url.Content("~/Content/global.css"))" rel="stylesheet" />
+    <style type="text/css">
+        html{
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+        .selectedHight .am-btn, .popmodelpanel .am-btn {
+            padding: 0.695em 1em;
+        }
+        .popmodelpanel input {
+            width: 80%;
+        }
+        .popmodelpanel .am-btn {
+            background: none;
+        }
+        #DateBegin .am-btn {
+            border-color: #ccc;
+            background: #e6e6e6;
+        }
+        .am-datepicker-dropdown {
+            z-index: 198910161;
+        }
+        .split {
+            width: 100%;
+            height: 20px;
+            background: #fff;
+        }
+        .labelFormat{
+            line-height: 33px;
+            margin-bottom: 0px;
+        }
+        .am-datepicker{
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">数据校验</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 下拉组 -->
+        <div class="selected-wrapper">
+            <div class="am-g">
+                <div class="am-u-sm-3 selectedHight">
+                    <div class="am-form-group">
+                        <label class="am-u-sm-3 am-form-label am-text-default labelFormat">考试年度:</label>
+                        <div class="am-u-sm-9">
+                            <laiq-select valuekey="id" labelkey="text" btnwidth="100%" maxheight="155" search-Box v-bind:model="GetYearLists" v-model="SelectedYear"></laiq-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-u-sm-11"></div>
+            </div>
+        </div>
+        <!-- 仅占位置 -->
+        <div class="split"></div>
+        <!-- 按钮组 -->
+        <div class="Btn-wrapper">
+            <div class="am-g">
+                <div class="am-u-sm-2">
+                    <div class="am-input-group am-input-group-sm">
+                        <span class="am-input-group-btn">
+                            <button class="am-btn am-btn-primary" type="button" v-on:click="DownloadAllFileFun">
+                                <i class="am-icon-download"></i>
+                                批 量 下 载
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="am-u-sm-10"></div>
+            </div>
+        </div>
+        <!-- 仅占位置 -->
+        <div class="split"></div>
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <table class="am-table am-table-striped am-table-hover table-main">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" v-model="CheckedAll" />
+                            </th>
+                            <th>考试代码</th>
+                            <th>考试名称</th>
+                            <th>考试文件名称</th>
+                            <th>考试年月</th>
+                            <th>下发时间</th>
+                            <th>上传结束时间</th>
+                            <th>下发人</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in GridListsData" v-bind:value="item.CustomerID">
+                            <td><input type="checkbox" v-model="item.CheckItem" /></td>
+                            <td>{{item.ksdm}}</td>
+                            <td>{{item.ksname}}</td>
+                            <td>{{item.FileName}}</td>
+                            <td>{{item.ksny}}</td>
+                            <td>{{item.UpLoadTime}}</td>
+                            <td>{{item.UploadEndTime}}</td>
+                            <td>{{item.UpLoadUser}}</td>
+                            <td>
+                                <div class="am-btn-toolbar">
+                                    <div class="am-btn-group am-btn-group-xs">
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" v-on:click="DownloadFileFun(item.id,item.FileName,item.FileSize,item.OssName)">
+                                            <i class="am-icon-download"></i>
+                                            下 载
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 分页设置 -->
+        <div class="am-tab-panel">
+            <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;">
+                <div class="am-u-sm-12">
+                    共 <span v-text="totle"></span> 条记录
+                    <div class="am-fr">
+                        <div id="page"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Content/vue/laiqui/laiqui.min.js"></script>
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            // 监听年份选择事件
+            SelectedYear: function (val, oldVal) {
+                var _this = this;
+                _this.SelectYearId = val;
+                _this.GetListsFun(_this.SelectYearId);
+            },
+            // 全选状态切换
+            CheckedAll: function () {
+                var _this = this;
+                for (var i = 0; i < _this.GridListsData.length; i++) {
+                    _this.GridListsData[i].CheckItem = _this.CheckedAll;
+                }
+            }
+        },
+        data: function () {
+            return {
+                GridListsData: [],
+                totle: 0,
+                count: 0, 
+                CheckedAll: false, // 全选效果显示
+                CheckedAllIdArry: [], // 全选数据
+                GetYearLists: [], // 获取年份下拉列表数据
+                SelectYearId: '', // 获取选中年份对应ID
+                SelectedYear: '', // 判断 “选择年份” 下拉列表是否是单选, v-model对应的值, 单选为number,  多选为Array;
+            }
+        },
+        methods: {
+            GetListsFun: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/datacheck/dc_down/dc_setList", {
+                    page: 1,
+                    start: 0,
+                    limit: 10,
+                    ksyear: _this.SelectYearId
+                }, function (data) {
+                    _this.GridListsData = data.data;
+                    _this.totle = data.total;
+                    // 为每个对象设置是否选中
+                    if (_this.GridListsData !== null) {
+                        for (var i = 0; i < _this.GridListsData.length; i++) {
+                            data.data[i].CheckItem = false;
+                        }
+                        _this.count = Math.ceil(_this.totle / 10);
+                        if (_this.count > 1) {
+                            $("#page").show();
+                            laypage({
+                                cont: "page", pages: _this.count, groups: 5, skin: "#1E9FFF", jump: function (obj, first) {
+                                    if (!first) {
+                                        $.post("/datacheck/dc_down/dc_setList", { page: obj.curr, start: 0, limit: 10, ksyear: _this.SelectYearId}, function (data) {
+                                            _this.GridListsData = data.data;
+                                            _this.count = data.total;
+                                        }, "json");
+                                    }
+                                }
+                            });
+                        } else {
+                            // 小于1页或者没有数据的情况下不显示分页
+                            $("#page").hide();
+                        }
+                        layer.closeAll();
+                    } else {
+                        layer.alert('暂无此次搜索项内容', {
+                            icon: 5,
+                            title: '提示',
+                            skin: 'layer-ext-moon'
+                        })
+                    }
+                }, "json");
+            },
+            // 获取年份
+            GetYearsFun: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/datacheck/dc_down/getDc_ksYear", { page: 1, start: 0, limit: 25}, function (data) {
+                    _this.GetYearLists = data;
+                }, "json");
+            },
+            // 批量下载考试文件
+            DownloadAllFileFun: function () {
+                var _this = this;
+                var SelectedFileNum = 0;// 选中的数量
+                _this.CheckedAllIdArry = [];
+                for (var i = 0; i < _this.GridListsData.length; i++) {
+                    if (_this.GridListsData[i].CheckItem == true) {
+                        SelectedFileNum++;
+                        _this.CheckedAllIdArry.push(_this.GridListsData[i]);// 将选中的用户的id存入CheckedAllIdArry数组
+                    }
+                };
+                // 判断选中的考试信息数量，如果大于等于1则可以下载，反之则不能下载并给予信息提示
+                if (SelectedFileNum >= 1) {
+                    layer.confirm('您确定要批量下载此考试信息？', {
+                        icon: 3,
+                        title: '下载考试信息',
+                        btn: ['确 定', '取 消'] //按钮
+                    }, function () {
+                        var ja = [];
+                        $.each(_this.CheckedAllIdArry, function (index,item) {
+                            var thisId = item.id;
+                            var thisName = item.FileName;
+                            var thisSize = item.FileSize;
+                            var OssName = item.OssName;
+                            if (OssName != null) {
+                                // 此处注释的Uaid、Uid不知道从何处获取，后台需看一下
+                                // var jo = { 'Id': thisId, 'Name': thisName, 'Size': thisSize, 'IsOss': true, 'Url': OssName, "isDC": true, 'Uaid': Scpta.common.customerotherinfo.AreaID, 'Uid': Scpta.common.customerotherinfo.CustomerID };
+                                var jo = { 'Id': thisId, 'Name': thisName, 'Size': thisSize, 'IsOss': true, 'Url': OssName, "isDC": true};
+                                ja.push(jo);
+                            }
+                            else {
+                                // 此处注释的Uaid、Uid不知道从何处获取，后台需看一下
+                                // var thisUrl = "http://sh.scpta.gov.cn/datacheck/dc_down/GetFileFromDiscToMySql?Id=" + thisId + "&uid=" + Scpta.common.customerotherinfo.CustomerID;
+                                var thisUrl = "http://sh.scpta.gov.cn/datacheck/dc_down/GetFileFromDiscToMySql?Id=" + thisId;
+                                var jo = { 'Id': thisId, 'Name': thisName, 'Size': thisSize, 'IsOss': false, 'Url': thisUrl };
+                                ja.push(jo);
+                            }
+                        });
+                        jsObj.nodeAction(JSON.stringify(ja), _this.CheckedAllIdArry.length);
+                        layer.closeAll();
+                    }, function () {
+                        return;
+                    });
+                } else {
+                    layer.alert('请选择要删除的考试信息', {
+                        icon: 8,
+                        title: '提示',
+                        skin: 'layer-ext-moon'
+                    })
+                }
+            },
+            // 下载考试文件
+            DownloadFileFun: function (DownloadFileId,DownloadFileName,DownloadFileSize,DownloadFileOssName) {
+                var _this = this;
+                layer.confirm('您确定要下载此考试信息？', {
+                    icon: 3,
+                    title: '下载考试信息',
+                    btn: ['确 定', '取 消'] //按钮
+                }, function () {
+                    var ja = [];
+                    if (DownloadFileOssName != null) {
+                        // 此处注释的Uaid、Uid不知道从何处获取，后台需看一下
+                        // var jo = { 'Id': DownloadFileId, 'Name': DownloadFileName, 'Size': DownloadFileSize, 'IsOss': true, 'Url': rec.get("OssName"), "isDC": true, 'Uaid': Scpta.common.customerotherinfo.AreaID, 'Uid': Scpta.common.customerotherinfo.CustomerID };
+                        var jo = { 'Id': DownloadFileId, 'Name': DownloadFileName, 'Size': DownloadFileSize, 'IsOss': true, 'Url': DownloadFileOssName, "isDC": true};
+                        ja.push(jo);
+                    }
+                    else {
+                        // 此处注释的Uaid、Uid不知道从何处获取，后台需看一下
+                        // var thisUrl = "http://sh.scpta.gov.cn/datacheck/dc_down/GetFileFromDiscToMySql?Id=" + DownloadFileId + "&uid=" + Scpta.common.customerotherinfo.CustomerID;
+                        var thisUrl = "http://sh.scpta.gov.cn/datacheck/dc_down/GetFileFromDiscToMySql?Id=" + DownloadFileId;
+                        var jo = { 'Id': DownloadFileId, 'Name': DownloadFileName, 'Size': DownloadFileSize, 'IsOss': false, 'Url': thisUrl };
+                        ja.push(jo);
+                    }
+                    jsObj.nodeAction(JSON.stringify(ja), 1);
+                    layer.closeAll();
+                }, function () {
+                    return;
+                });
+            },
+            initSelectDate: function () {
+                var _this = this;
+            }
+        },
+        mounted: function () {
+            var _this = this;
+            // 年份加载函数
+            _this.GetYearsFun();
+            // 充值记录列表调用函数
+            _this.GetListsFun();
+            // 下拉初始化
+            // _this.initSelectDate();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "下载校验文件"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

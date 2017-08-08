@@ -1,0 +1,225 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>上传校验结果</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <link href="@(Url.Content("~/Content/global.css"))" rel="stylesheet" />
+    <style type="text/css">
+        html{
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+        .split {
+            width: 100%;
+            height: 20px;
+            background: #fff;
+        }
+        .UpLoader-wrapper{
+            width: 800px;
+            height: auto;
+            border: 1px solid #eee;
+            padding: 40px 30px;
+            margin: 100px auto;
+        }
+        .am-form-group{
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">数据校验</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 按钮组 -->
+        <div class="UpLoader-wrapper">
+            <form class="am-form">
+                <fieldset>
+                    <legend>上传校验结果</legend>
+                    <div class="am-g">
+                        <div class="am-u-sm-12">
+                            <div class="am-form-group"> 
+                                <label class="am-u-sm-3 am-form-label am-text-default labelFormat" style="line-height: 32px;">文件名格式</label>
+                                <label class="am-u-sm-9 am-form-label am-text-danger labelFormat" style="line-height: 32px;">考试代码<3位>_考试年月<6位>_机构代码<3位>_校验结果.KWDJYJG</label>
+                            </div>
+                            <div class="am-form-group">
+                                <label class="am-u-sm-3 am-form-label am-text-default labelFormat" style="line-height: 32px;">上传文件名称</label>
+                                <div class="am-u-sm-6">
+                                    <input type="text" id="doc-ipt-3" placeholder="请上传需要上传的文件" v-bind:value="fileName">
+                                </div>
+                                <div class="am-u-sm-3">
+                                    <div class="am-form-group am-form-file">
+                                        <button type="button" class="am-btn am-btn-default am-btn-sm" style="height: 32px;">
+                                            <!-- <i class="am-icon-cloud-upload"></i> -->
+                                            选择要上传的文件
+                                        </button>
+                                        <input id="doc-form-file" type="file">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="am-form-group">
+                                <div class="am-u-sm-9 am-u-sm-offset-3">
+                                    <button type="button" class="am-btn am-btn-default" v-on:click="UploadFileBtnFun">
+                                        <i class="am-icon-cloud-upload"></i>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;上&nbsp;&nbsp;传&nbsp;&nbsp;&nbsp;&nbsp;
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Content/vue/laiqui/laiqui.min.js"></script>
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            
+        },
+        data: function () {
+            return {
+                fileName: '',
+                uid: '',
+                token: ''
+            }
+        },
+        methods: {
+            // 点击选择按钮
+            UploaderFilesNameFun: function () {
+                var _this = this;
+                $('#doc-form-file').on('change', function() {
+                    $.each(this.files, function() {
+                        _this.fileName =  this.name;
+                    });
+                });
+            },
+            // 点击上传按钮
+            UploadFileBtnFun: function () {
+                var _this = this;
+                if(_this.fileName == ''){
+                    $.post("/datacheck/dc_upload/isC", {
+                        uid: _this.uid,
+                        token: _this.token,
+                        filenames: _this.fileName
+                    }, function (data) {
+                        if(data.success == false){
+                            layer.alert(data.Msg, {
+                                icon: 5,
+                                title: '提示',
+                                skin: 'layer-ext-moon'
+                            })
+                        }
+                    },'json');
+                }else{
+                    layer.confirm('您确定要上传此文件？', {
+                        icon: 3,
+                        title: '上传文件',
+                        btn: ['确 定', '取 消'] //按钮
+                    }, function () {
+                        $.post('/datacheck/dc_upload/isC', {
+                            uid: _this.uid,
+                            token: _this.token,
+                            filenames: _this.fileName
+                        }, function (data) {
+                            if (data.success) {
+                                // 上传成功后清空选项框
+                                _this.fileName = '';
+                                layer.alert(data.Msg, {
+                                    icon: 5,
+                                    title: '提示',
+                                    skin: 'layer-ext-moon'
+                                })
+                            }else{
+                                layer.alert(data.Msg, {
+                                    icon: 5,
+                                    title: '提示',
+                                    skin: 'layer-ext-moon'
+                                })
+                            }
+                        }, "json");
+                    }, function () {
+                        return;
+                    });
+                }
+                
+            }
+        },
+        mounted: function () {
+            var _this = this;
+            // 选择文件
+            _this.UploaderFilesNameFun();
+
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "上传校验结果"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

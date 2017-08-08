@@ -1,0 +1,1648 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>用户管理</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <link href="@(Url.Content("~/Content/global.css"))" rel="stylesheet" />
+    <link href="@(Url.Content("~/Scripts/zTree/css/zTreeStyle/zTreeStyle.css"))" rel="stylesheet" />
+    <link href="@(Url.Content("~/Areas/FtpCloud/css/style_sass/style.min.css"))" rel="stylesheet" />
+    <style type="text/css">
+        html{
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+
+        .selectedHight .am-btn, .popmodelpanel .am-btn {
+            padding: 0.695em 1em;
+        }
+
+        .NoteShows {
+            display: none;
+        }
+
+        .popmodelpanel input {
+            width: 80%;
+        }
+
+        .popmodelpanel .am-btn {
+            background: none;
+        }
+
+        #DateBegin .am-btn {
+            border-color: #ccc;
+            background: #e6e6e6;
+        }
+
+        .am-datepicker-dropdown {
+            z-index: 198910161;
+        }
+        #bbbbb label,#cccc label,.am-btn-group-xs > .am-btn{
+            font-size: 1.4rem;
+        }
+        #aaaa label,#dddd label{
+            padding: 0.0rem;
+            line-height: 33px;
+            margin-bottom: 0px;
+        }
+        #aaaa .am-u-sm-8,#dddd .am-u-sm-8{
+            padding: 0.0rem;
+        }
+    </style>
+    <style type="text/css">
+        .ztree li a.level0 span{font-size: 10pt!important;}
+        #treeDemo_1_ul li a,#treePopDemo_1_ul li a{padding-left: 10px;}
+        .am-selected-list li:hover {background-color: #fff;}
+        .ztree * {font-size: 10pt;font-family:"Microsoft Yahei",Verdana,Simsun,"Segoe UI Web Light","Segoe UI Light","Segoe UI Web Regular","Segoe UI","Segoe UI Symbol","Helvetica Neue",Arial}
+        .ztree li ul{ margin:0; padding:0}
+        .ztree li {line-height:30px;}
+        .ztree li a {width:100%;height:30px;padding-top: 0px;}
+        .ztree li a:hover {text-decoration:none; background-color: #E7E7E7;}
+        .ztree li a span.button.switch {visibility:hidden}
+        .ztree.showIcon li a span.button.switch {visibility:visible}
+        .ztree li a.curSelectedNode {background-color:#D4D4D4;border:0;height:30px;}
+        .ztree li span {line-height:30px;}
+        .ztree li span.button {margin-top: -7px;}
+        .ztree li span.button.switch {width: 16px;height: 16px;}
+        .ztree li a.level0 span {font-size: 150%;font-weight: bold;}
+        .ztree li span.button {background-image:url("../../Content/images/left_menuForOutLook.png"); *background-image:url("../../Content/images/left_menuForOutLook.gif")}
+        .ztree li span.button.switch.level0 {width: 20px; height:20px}
+        .ztree li span.button.switch.level1 {width: 20px; height:20px}
+        .ztree li span.button.noline_open {background-position: 0 0;}
+        .ztree li span.button.noline_close {background-position: -18px 0;}
+        .ztree li span.button.noline_open.level0 {background-position: 0 -18px;}
+        .ztree li span.button.noline_close.level0 {background-position: -18px -18px;}
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">系统管理</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 表单输入框 -->
+        <div id="aaaa" class="am-g">
+            <div class="am-u-sm-2 selectedHight">
+                <div class="am-form-group">
+                    <label for="doc-ipt-3" class="am-u-sm-4 am-form-label am-text-default">角色:</label>
+                    <div class="am-u-sm-8">
+                        <select id="selected1">
+                            <option v-for="item in Selected1" v-bind:value="item.id">{{item.text}}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="am-u-sm-2 selectedHight">
+                <div class="am-form-group">
+                    <label for="doc-ipt-3" class="am-u-sm-4 am-form-label am-text-default">地区:</label>
+                    <div class="am-u-sm-8">
+                        <!-- <laiq-select-tree valuekey="id" labelkey="text" v-model="root" v-bind:model="Selected2" btnwidth="100%" maxheight="155"></laiq-select-tree> -->
+                        <input id="citySel" class="am-selected-btn am-btn am-dropdown-toggle am-btn-sm am-btn-default" type="text" readonly v-bind:value="dqVal" style="text-align: left;" v-on:click="showTreeMenu" placeholder="请选择地区" />
+                        <i class="am-selected-icon am-icon-caret-down" style="position: absolute;top: 5px;right: 5px"></i>
+                        <div id="menuContent" class="menuContent am-selected-content am-dropdown-content" style="display:none; width: 100%; position: absolute;top: 33px!important;left: 0px!important;z-index: 1;height: 297px;">
+                            <h2 class="am-selected-header">
+                                <span class="am-icon-chevron-left">返回</span>
+                            </h2>
+                            <ul id="treeDemo" class="ztree am-selected-list" style="margin-top:0; width:100%;height:100%;overflow: auto;"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="am-u-sm-2 selectedHight">
+                <div class="am-form-group">
+                    <label for="doc-ipt-3" class="am-u-sm-4 am-form-label am-text-default">单位:</label>
+                    <div class="am-u-sm-8">
+                        <select id="selected4">
+                            <option v-for="item in Selected4" v-bind:value="item.id">{{item.text}}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="am-u-sm-2 selectedHight">
+                <div class="am-form-group">
+                    <label for="doc-ipt-3" class="am-u-sm-4 am-form-label am-text-default">类别:</label>
+                    <div class="am-u-sm-8">
+                        <select id="selected3">
+                            <option v-for="item in Selected3" v-bind:value="item.id">{{item.text}}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="am-u-sm-2">
+                <div id="SearchGroupBtn" class="am-input-group am-input-group-sm">
+                    <input type="text" class="am-form-field" placeholder="待查询条件" v-model="Keyword" v-on:keyup.enter="SearchGetList">
+                    <span class="am-input-group-btn">
+                        <button class="am-btn am-btn-default" type="button" v-on:click="SearchGetList"> 查&nbsp;&nbsp;询 </button>
+                    </span>
+                </div>
+            </div>
+            <div class="am-u-sm-2">
+            </div>
+        </div>
+        <div id="dddd" class="NoteShows">
+            <!-- 占位置 -->
+            <div class="split" style="width: 100%;height: 20px;background: #fff;"></div>
+            <!-- 表单输入框 -->
+            <div class="am-g">
+                <div class="am-u-sm-2 selectedHight">
+                    <div class="am-form-group">
+                        <label for="doc-ipt-3" class="am-u-sm-4 am-form-label am-text-default">年份:</label>
+                        <div class="am-u-sm-8">
+                            <select id="selected5">
+                                <option v-for="item in Selected5" v-bind:value="item.id">{{item.text}}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-u-sm-2 selectedHight">
+                    <div class="am-form-group">
+                        <label for="doc-ipt-3" class="am-u-sm-4 am-form-label am-text-default">关键字:</label>
+                        <div class="am-u-sm-8">
+                            <laiq-select valuekey="id" labelkey="text" btnwidth="100%" maxheight="155" v-bind:model="Selected6" v-model="Keyword"></laiq-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-u-sm-2">
+                    <div class="am-input-group am-input-group-sm">
+                        <span class="am-input-group-btn">
+                            <button class="am-btn am-btn-default" type="button" v-on:click="getList">&nbsp;&nbsp;&nbsp;&nbsp;查&nbsp;&nbsp;询&nbsp;&nbsp;&nbsp;&nbsp;</button>
+                        </span>
+                    </div>
+                </div>
+                <div class="am-u-sm-2">
+                </div>
+            </div>
+        </div>
+        <!-- 占位置 -->
+        <div class="split" style="width: 100%;height: 20px;background: #fff;"></div>
+        <!-- 黑名单添加 -->
+        <div class="am-g">
+            <div class="am-u-sm-2">
+                <div class="am-input-group am-input-group-sm">
+                    <span class="am-input-group-btn">
+                        <button class="am-btn am-btn-secondary" type="button" v-on:click="AddUser">
+                            <i class="am-icon-plus"></i>
+                            新 建 用 户
+                        </button>
+                    </span>
+                    <span class="am-input-group-btn">
+                        <button class="am-btn am-btn-warning" type="button" v-on:click="DefaultSort">
+                            <i class="am-icon-sort-alpha-asc"></i>
+                            默 认 排 序
+                        </button>
+                    </span>
+                    <span class="am-input-group-btn">
+                        <button class="am-btn am-btn-danger" type="button" v-on:click="RemoveSelectedUser">
+                            <i class="am-icon-trash"></i>
+                            批 量 删 除 用 户
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <div class="am-u-sm-10"></div>
+        </div>
+        <!-- 占位置 -->
+        <div class="split" style="width: 100%;height: 20px;background: #fff;"></div>
+        <!-- dataGrid -->
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <table class="am-table am-table-striped am-table-hover table-main">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" v-model="CheckedAll" />
+                            </th>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>地区</th>
+                            <th>单位</th>
+                            <th>角色</th>
+                            <th>状态</th>
+                            <th>创建人</th>
+                            <th>最后登录日期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in GridListsData" v-bind:value="item.CustomerID">
+                            <td><input type="checkbox" v-model="item.CheckItem" /></td>
+                            <td>{{item.CustomerID}}</td>
+                            <td>{{item.Username}}</td>
+                            <td>{{item.AreaName}}</td>
+                            <td>{{item.dw}}</td>
+                            <td>{{item.role}}</td>
+                            <td v-if="item.IsAlive==0">启用</td> <!-- 状态 -->
+                            <td v-else>停用</td> <!-- 状态 -->
+                            <td>{{item.AddUser}}</td>
+                            <td>{{item.LastLoginTime}}</td>
+                            <td>
+                                <div class="am-btn-toolbar">
+                                    <div class="am-btn-group am-btn-group-xs">
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-secondary" v-on:click="EditUser(item.CustomerID)">
+                                            <i class="am-icon-pencil-square-o"></i>
+                                            编辑
+                                        </button>
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-warning" v-on:click="SetUserPwd(item.CustomerID)">
+                                            <i class="am-icon-gear"></i>
+                                            设置密码
+                                        </button>
+                                        <button class="am-btn am-btn-default am-btn-xs am-text-danger" v-on:click="RemoveUser(item)">
+                                            <i class="am-icon-trash"></i>
+                                            删除
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @* 分页设置 *@
+        <div class="am-tab-panel">
+            <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;">
+                <div class="am-u-sm-12">
+                    共 <span v-text="totle"></span> 条记录
+                    <div class="am-fr">
+                        <div id="page"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*新增弹框*@
+        <div id="bbbbb" class="am-tab-panel popmodelpanel" style="width:100%;height:auto;margin-top:20px;" v-show="ShowViews">
+            <form class="am-form am-form-horizontal">
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3-a" class="am-u-sm-3 am-form-label am-text-danger">姓名:</label>
+                            <div class="am-u-sm-9">
+                                <input class="am-form-field" type="text" name="Username" v-model="Name" placeholder="输入您的姓名">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">性别:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="text" v-bind:model="SexData" v-model="SexId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">民族:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="name" v-bind:model="FamilyName" v-model="FamilyNameId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">身份证号:</label>
+                            <div class="am-u-sm-9">
+                                <input class="am-form-field" type="text" name="CardID" v-model="CardID" maxlength="18" onkeyup="value=value.replace(/^[a-zA-Z]+\D*|^\d{0,16}[a-zA-Z]+|[^0-9Xx]/g,'') " onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">籍贯:</label>
+                            <div class="am-u-sm-9">
+                                <input type="text" class="am-form-field" v-model="Origin" placeholder="输入您的籍贯">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">出生日期:</label>
+                            <div class="am-u-sm-9">
+                                <div id="DateBegin" class="am-input-group am-input-group-sm am-datepicker-date">
+                                    <input type="text" class="am-form-field" v-bind:value="begin" v-model="begin" placeholder="开始时间">
+                                    <span class="am-input-group-btn am-datepicker-add-on">
+                                        <button class="am-btn am-btn-default" type="button"><span class="am-icon-calendar"></span> </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">最高学历:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="name" v-bind:model="HighestEducation" v-model="HighestEducationId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">毕业院校:</label>
+                            <div class="am-u-sm-9">
+                                <input type="text" class="am-form-field" v-model="GraduationSchool" placeholder="输入您的毕业院校名称">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">所学专业:</label>
+                            <div class="am-u-sm-9">
+                                <input type="text" class="am-form-field" v-model="Major" placeholder="输入您的所学专业名称">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">政治面貌:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="name" v-bind:model="PoliticalOutlook" v-model="PoliticalOutlookId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">用户名:</label>
+                            <div class="am-u-sm-9">
+                                <input type="text" class="am-form-field" v-model="Username" placeholder="输入您的用户名" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">地区:</label>
+                            <div class="am-u-sm-9" style="position: relative;">
+                               <!--  <laiq-select-tree id="DqSelected" valuekey="id" labelkey="text" v-bind:model="Selected2" v-model="DqSelected" btnwidth="100%" maxheight="155"></laiq-select-tree> -->
+                               <input id="citySel1" class="am-selected-btn am-btn am-dropdown-toggle am-btn-sm am-btn-default" type="text" v-bind:value="dqValPop" style="text-align: left;" v-on:click="showTreePopMenu" placeholder="请选择地区" />
+                                <i class="am-selected-icon am-icon-caret-down" style="position: absolute;top: 5px;right: 23px"></i>
+                                <div id="menuContent1" class="menuContent am-selected-content am-dropdown-content" style="display:none; width: 87%; position: absolute;top: 33px!important;left: 0px!important;z-index: 1;height: 297px;">
+                                    <h2 class="am-selected-header">
+                                        <span class="am-icon-chevron-left">返回</span>
+                                    </h2>
+                                    <ul id="treePopDemo" class="ztree am-selected-list" style="margin-top:0; width:100%;height:100%;overflow: auto;"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">角色:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="text" v-bind:model="RoleData" v-model="RoleId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">状态:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="text" v-bind:model="State" v-model="StateId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">手机号:</label>
+                            <div class="am-u-sm-9">
+                                <input type="text" class="am-form-field" v-model="PhoneNum" placeholder="输入您的手机号码">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">座机号:</label>
+                            <div class="am-u-sm-9">
+                                <input type="text" class="am-form-field" v-model="TellNum" placeholder="输入您的座机号码">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">邮箱:</label>
+                            <div class="am-u-sm-9">
+                                <input type="text" class="am-form-field" v-model="Email" placeholder="输入您的电子邮箱地址">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">备注:</label>
+                            <div class="am-u-sm-9">
+                                <input type="text" class="am-form-field" v-model="beizhuTxt" placeholder="输入您的备注信息">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">单位:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="text" v-bind:model="DWData" v-model="DwSelectedId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">单位性质:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="text" v-bind:model="DWXZ" v-model="DWXZId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">科室:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="text" v-bind:model="DepartmentData" v-model="DepartmentSelectedId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">岗位:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select multiple valuekey="id" labelkey="text" v-bind:model="PostData" v-model="PostIds" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">职位:</label>
+                            <div class="am-u-sm-9">
+                                <laiq-select valuekey="id" labelkey="text" v-bind:model="JobData" v-model="JobId" btnwidth="100%" maxheight="155"></laiq-select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6" v-show="EditPopViews">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">密码:</label>
+                            <div class="am-u-sm-9">
+                                <input type="password" class="am-form-field" v-model="Psd1" placeholder="输入您的初始密码">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g" v-show="EditPopViews">
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label">密码过期天数:</label>
+                            <div class="am-u-sm-9">
+                                <input type="text" class="am-form-field" v-model="PsdExpirationTime" placeholder="只能输入数字">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-6">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">确认密码:</label>
+                            <div class="am-u-sm-9">
+                                <input type="password" class="am-form-field" v-model="Psd2" placeholder="再次输入您的初始密码">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        @* 设置用户密码 *@
+        <div id="cccc" class="am-tab-panel popmodelpanel" style="width:100%;height:auto;margin-top:20px;" v-show="ShowViews">
+            <form class="am-form am-form-horizontal">
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3-a" class="am-u-sm-3 am-form-label am-text-danger">密码:</label>
+                            <div class="am-u-sm-9">
+                                <input class="am-form-field" type="password" name="UserPsd" v-model="Psd1" placeholder="输入密码">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">确认密码:</label>
+                            <div class="am-u-sm-9">
+                                <input class="am-form-field" type="password" name="UserPsd" v-model="Psd2" placeholder="再次输入密码">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <div class="am-form-group">
+                            <label for="doc-ipt-3" class="am-u-sm-3 am-form-label am-text-danger">密码过期天数:</label>
+                            <div class="am-u-sm-9">
+                                <input class="am-form-field" type="text" name="UserPsdTime" v-model="PsdExpirationTime" placeholder="输入密码过期天数">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Content/vue/laiqui/laiqui.min.js"></script>
+<script src="@(Url.Content("~/Scripts/zTree/js/jquery.ztree.core-3.5.min.js"))" type="text/javascript"></script>
+<script>
+    var darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            // 中心版面地区选择框
+            root: function (val, oldVal) {
+                var _this = this;
+                _this.treeid = val;
+            },
+            // // 地区下拉选择后才能选择角色和单位下拉选择框
+            // DqSelected: function (val, oldVal) {
+            //     var _this = this;
+            //     _this.DqId = val;
+            //     // 如果新增用户信息弹出页中的地区id不为空则启用角色和单位下拉选项框
+            //     if (_this.DqId != "" || _this.DqId != null) {
+            //         $("#pop-selected-6").selected('enable');// 角色
+            //         $("#pop-selected-10").selected('enable');// 单位
+            //     }
+            //     // 角色启用并加载数据
+            //     $.post("/user/getroleByArea", { page: 1, start: 0, limit: 25, areaid: _this.DqId }, function (data) {
+            //         _this.RoleData = [];// 每次的数据更新需要先提前把数组清空
+            //         $.each(data, function (index, item) {
+            //             _this.RoleData.push(item);
+            //         })
+            //     }, "json");
+            //     // 只有地区选择后才能选择单位，这里就是加载单位数据
+            //     $.post("/user/getcompByArea", { page: 1, start: 0, limit: 25, areaid: _this.DqId }, function (data) {
+            //         _this.DWData = [];// 每次的数据更新需要先提前把数组清空
+            //         $.each(data, function (index, item) {
+            //             _this.DWData.push(item);
+            //         })
+            //     }, "json");
+            // },
+            // 单位下拉选择后才能选择科室下拉
+            DwSelectedId: function (val, oldVal) {
+                var _this = this;
+                _this.DwId = val;
+                // 科室
+                $.post("/user/getdepartByComp", { page: 1, start: 0, limit: 25, compid: _this.DwId }, function (data) {
+                    _this.DepartmentData = [];// 每次的数据更新需要先提前把数组清空
+                    $.each(data, function (index, item) {
+                        _this.DepartmentData.push(item);
+                    })
+                }, "json");
+            },
+            // 科室下拉选择后才能选择职位下拉
+            DepartmentSelectedId: function (val, oldVal) {
+                var _this = this;
+                _this.Department = val;
+                // 职位
+                $.post("/user/getpostiByDepart", { page: 1, start: 0, limit: 25, departid: _this.Department }, function (data) {
+                    _this.JobData = [];// 每次的数据更新需要先提前把数组清空
+                    $.each(data, function (index, item) {
+                        _this.JobData.push(item);
+                    })
+                }, "json");
+            },
+            // 全选状态切换
+            CheckedAll: function () {
+                var _this = this;
+                for (var i = 0; i < _this.GridListsData.length; i++) {
+                    _this.GridListsData[i].CheckItem = _this.CheckedAll;
+                }
+            }
+        },
+        data: function () {
+            return {
+                GridListsData: [],// 总的列表数据
+                Selected1: [{ "id": "-1", "text": "点击选择..." }],// 角色下拉列表数据
+                Selected2: [],// 地区下拉树列表数据
+                Selected3: [{ "id": 1, "text": "用户名" }, { "id": 2, "text": "身份证号" }, { "id": 3, "text": "电话号码" }, { "id": 4, "text": "备注" }, { "id": 5, "text": "工作单位" }],// 类别下拉列表数据
+                Selected4: [{ "id": "-1", "text": "点击选择..." }],// 单位下拉列表数据
+                Selected5: [{ "id": "-1", "text": "选中年份..." }],// 年份下拉列表数据
+                Selected6: [{ "id": "-1", "text": "点击选择..." }],// 关键字下拉列表数据
+                root: 'root',
+                curExpandNode : null,
+                dqVal:'',
+                dqValId:'',
+                DqSelected: '', // 地区下拉框model
+                DwSelectedId: '', // 单位下拉选择Id
+                DepartmentSelectedId: '', // 科室下拉选择Id
+                GetUserSelectedId: '',// 角色选中id
+                treeid: '',// 下拉树id
+                selectedTypeId: '',// 类别选中id
+                GetDwSelectedId: '',// 单位选中id
+                Keyword: '',// 关键字搜索与下拉关键字搜索同为一个key值
+                GetYearSelectedId: '',// 年份选中id
+                totle: 0,
+                count: 0,
+                CheckedAll: false,// 全选效果显示
+                CheckedAllIdArry: [], // 全选数据
+                // 以下是新建用户弹出框返回数据
+                EditIdL: '',
+                Name: '',// 姓名
+                SexId: '',// 性别
+                FamilyNameId: '', // 民族
+                CardID: '', // 身份证ID
+                Origin: '',// 籍贯
+                begin: '',// 出生日期
+                HighestEducationId: '',// 最高学历
+                GraduationSchool: '', // 毕业院校
+                Major: '', // 专业
+                PoliticalOutlookId: '', // 政治面貌
+                Username: '',// 用户名
+                dqValPop:'',
+                DqId: '', // 地区
+                RoleId: '',// 角色
+                StateId: '',// 状态
+                PhoneNum: '',// 电话号码
+                TellNum: '',// 座机号码
+                Email: '',// 电子邮件
+                beizhuTxt: '',// 备注
+                DwId: '',// 单位
+                DWXZId: '',// 单位性质
+                Department: '', // 科室
+                PostIds: [],// 岗位 特别注释：因为这里是多选，所以这里的数据类型是数组
+                Psd1: '', // 密码
+                Psd2: '',// 确认密码
+                JobId: '',
+                PsdExpirationTime: '', // 时间过期天数
+                // 以下是新增用户信息弹出框加载数据
+                SexData: [{ "id": "-1", "text": "点击选择..." }, { "id": "0", "text": "男" }, { "id": "1", "text": "女" }], // 性别
+                FamilyName: [{ "id": "-1", "name": "点击选择..." }, { "id": "汉族", "name": "汉族" }, { "id": "壮族", "name": "壮族" }, { "id": "满族", "name": "满族" }, { "id": "回族", "name": "回族" }, { "id": "苗族", "name": "苗族" }, { "id": "维吾尔族", "name": "维吾尔族" }, { "id": "土家族", "name": "土家族" }, { "id": "彝族", "name": "彝族" }, { "id": "蒙古族", "name": "蒙古族" }, { "id": "藏族", "name": "藏族" }, { "id": "布依族", "name": "布依族" }, { "id": "侗族", "name": "侗族" }, { "id": "瑶族", "name": "瑶族" }, { "id": "朝鲜族", "name": "朝鲜族" }, { "id": "白族", "name": "白族" }, { "id": "哈尼族", "name": "哈尼族" }, { "id": "哈萨克族", "name": "哈萨克族" }, { "id": "黎族", "name": "黎族" }, { "id": "傣族", "name": "傣族" }, { "id": "畲族", "name": "畲族" }, { "id": "傈僳族", "name": "傈僳族" }, { "id": "仡佬族", "name": "仡佬族" }, { "id": "东乡族", "name": "东乡族" }, { "id": "高山族", "name": "高山族" }, { "id": "拉祜族", "name": "拉祜族" }, { "id": "水族", "name": "水族" }, { "id": "佤族", "name": "佤族" }, { "id": "纳西族", "name": "纳西族" }, { "id": "羌族", "name": "羌族" }, { "id": "土族", "name": "土族" }, { "id": "仫佬族", "name": "仫佬族" }, { "id": "锡伯族", "name": "锡伯族" }, { "id": "柯尔克孜族", "name": "柯尔克孜族" }, { "id": "达斡尔族", "name": "达斡尔族" }, { "id": "景颇族", "name": "景颇族" }, { "id": "毛南族", "name": "毛南族" }, { "id": "撒拉族", "name": "撒拉族" }, { "id": "塔吉克族", "name": "塔吉克族" }, { "id": "阿昌族", "name": "阿昌族" }, { "id": "普米族", "name": "普米族" }, { "id": "鄂温克族", "name": "鄂温克族" }, { "id": "怒族", "name": "怒族" }, { "id": "京族", "name": "京族" }, { "id": "基诺族", "name": "基诺族" }, { "id": "德昂族", "name": "德昂族" }, { "id": "保安族", "name": "保安族" }, { "id": "俄罗斯族", "name": "俄罗斯族" }, { "id": "裕固族", "name": "裕固族" }, { "id": "乌兹别克族", "name": "乌兹别克族" }, { "id": "门巴族", "name": "门巴族" }, { "id": "鄂伦春族", "name": "鄂伦春族" }, { "id": "独龙族", "name": "独龙族" }, { "id": "塔塔尔族", "name": "塔塔尔族" }, { "id": "赫哲族", "name": "赫哲族" }, { "id": "珞巴族", "name": "珞巴族" }, { "id": "布朗族", "name": "布朗族" }],// 名族
+                HighestEducation: [{ "id": "-1", "name": "点击选择..." }, { "id": "博士", "name": "博士" }, { "id": "硕士", "name": "硕士" }, { "id": "大学本科", "name": "大学本科" }, { "id": "大学专科", "name": "大学专科" }, { "id": "中专", "name": "中专" }, { "id": "高中", "name": "高中" }, { "id": "初中", "name": "初中" }, { "id": "职高", "name": "职高" }, { "id": "其他", "name": "其他" }],// 学历
+                PoliticalOutlook: [{ "id": "-1", "name": "点击选择..." }, { "id": "中国共产党", "name": "中国共产党" }, { "id": "中国共产党预备党员", "name": "中国共产党预备党员" }, { "id": "中国共产主义青年团员", "name": "中国共产主义青年团员" }, { "id": "民革会员", "name": "民革会员" }, { "id": "中国民主同盟会会员", "name": "中国民主同盟会会员" }, { "id": "中国名著促进会会员", "name": "中国名著促进会会员" }, { "id": "中国农工民主党党员", "name": "中国农工民主党党员" }, { "id": "中国致公党党员", "name": "中国致公党党员" }, { "id": "九三学社社员", "name": "九三学社社员" }, { "id": "台湾民主自治同盟盟员", "name": "台湾民主自治同盟盟员" }, { "id": "无党派民主人士", "name": "无党派民主人士" }, { "id": "群众", "name": "群众" }],// 政治面貌
+                State: [{ "id": "-1", "text": "点击选择..." }, { "id": "0", "text": "启用" }, { "id": 1, "text": "停用" }],// 状态
+                DWXZ: [],// 单位性质
+                RoleData: [],// 角色数据
+                DWData: [],// 单位数据
+                PostData: [], // 岗位
+                DepartmentData: [],// 科室
+                JobData: [], // 职位
+                ShowViews: false, // 判断弹框是否显示
+                EditPopViews: true // 判断新增弹框/编辑弹框是否显示密码/确认密码/密码过期天数三个选项
+            }
+        },
+        methods: {
+            // 发送记录列表加载
+            getList: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/user/list", {
+                    page: 1,
+                    start: 0,
+                    limit: 10,
+                    Role_S: _this.GetUserSelectedId,
+                    AreaID_S: _this.treeid,
+                    key: _this.selectedTypeId,
+                    CompanyID_S: _this.GetDwSelectedId,
+                    kvalue: _this.Keyword
+                }, function (data) {
+                    _this.GridListsData = data.data;
+                    _this.totle = data.total;
+                    // 为每个对象设置是否选中
+                    if (_this.GridListsData !== null) {
+                        for (var i = 0; i < _this.GridListsData.length; i++) {
+                            data.data[i].CheckItem = false;
+                        }
+                        _this.count = Math.ceil(_this.totle / 10);
+                        if (_this.count > 1) {
+                            $("#page").show();
+                            laypage({
+                                cont: "page", pages: _this.count, groups: 5, skin: "#1E9FFF", jump: function (obj, first) {
+                                    if (!first) {
+                                        $.post("/user/list", { page: obj.curr, start: 0, limit: 10, Role_S: _this.GetUserSelectedId, AreaID_S: _this.treeid, key: _this.selectedTypeId, CompanyID_S: _this.GetDwSelectedId, kvalue: _this.Keyword }, function (data) {
+                                            _this.GridListsData = data.data;
+                                            _this.count = data.total;
+                                            _this.CheckedAll = false;// 翻页过后取消全选
+                                        }, "json");
+                                    }
+                                }
+                            });
+                        } else {
+                            // 小于1页或者没有数据的情况下不显示分页
+                            $("#page").hide();
+                        }
+                        // 地区下拉树
+                        // _this.GetDqTreeLists();
+                        layer.closeAll();
+                    } else {
+                        layer.alert('暂无此次搜索项内容', {
+                            icon: 5,
+                            title: '提示',
+                            skin: 'layer-ext-moon'
+                        })
+                    }
+                }, "json");
+            },
+            // 搜索
+            SearchGetList: function () {
+                var _this = this;
+                if(_this.selectedTypeId == ""){
+                    _this.selectedTypeId = 1;
+                }
+                _this.getList();
+            },
+            CheckedAll: function () {
+                var _this = this;
+            },
+            // 角色下拉框
+            GetUserSelected: function () {
+                var _this = this;
+                $.post("/user/getroleByArea_main", { page: 1, start: 0, limit: 25, areaid: -111 }, function (data) {
+                    $.each(data, function (index, item) {
+                        _this.Selected1.push(item);
+                    })
+                }, "json");
+            },
+            // 页面地区下拉树形数据处理
+            zTreeFun: function () {
+                var _this = this;
+                var setting = {
+                    async: {
+                        enable: true,
+                        url:"/user/ListByTree",
+                        autoParam:["id", "node"],
+                        otherParam:{"node":'root',"id":'root'},
+                        type:'post',
+                        dataType:'json',
+                        dataFilter: _this.filter
+                    },
+                    data: {
+                        key: {
+                            "name": "text"
+                        },
+                        simpleData : {
+                            enable : true,    
+                            idKey : "id", // id编号命名     
+                            pIdKey : "parentid", // 父id编号命名      
+                            rootId : 0  
+                        }
+                        ,
+                        keep: {
+                            parent: true,
+                            leaf: true
+                        }
+                    },
+                    callback: {
+                        beforeExpand: _this.beforeExpand,
+                        onClick:_this.onclick,
+                        onAsyncSuccess: _this.onAsyncSuccess
+                    },
+                    view: {
+                        showLine: false,
+                        showIcon: false,
+                        selectedMulti: false,
+                        dblClickExpand: false,
+                        addDiyDom: _this.addDiyDom
+                    }
+                };
+                return setting;
+            },
+            // 地区下拉异步数据预处理
+            filter: function (treeId, parentNode, childNodes) {
+                if (!childNodes) return null;    
+                if(typeof(parentNode)==='undefined'){
+                    for (var i=0; i<childNodes.length; i++) {
+                        for (var j = 0; j < childNodes[i].children.length; j++) {
+                             if(childNodes[i].children[j].leaf == false){
+                                childNodes[i].children[j].isParent = true;
+                            }
+                        }
+                    }
+                }else{
+                     for (var i=0; i<childNodes.length; i++) {
+                        if(childNodes[i].leaf == false){
+                            childNodes[i].isParent = true;
+                        }
+                    }
+                }
+                return childNodes;
+            },
+            // 选中节点
+            onclick: function (e, treeId, treeNode) {
+                var _this = this;
+                _this.dqVal = treeNode.text;
+                _this.treeid = treeNode.id;
+                _this.hideMenu();
+            },
+            beforeExpand:function(treeId, treeNode){
+                var _this = this;
+                var pNode = _this.curExpandNode ? _this.curExpandNode.getParentNode():null;
+                var treeNodeP = treeNode.parentTId ? treeNode.getParentNode():null;
+                var zTree = $.fn.zTree.getZTreeObj("treeDemo");
+                for(var i=0, l=!treeNodeP ? 0:treeNodeP.children.length; i<l; i++ ) {
+                    if (treeNode !== treeNodeP.children[i]) {
+                        zTree.expandNode(treeNodeP.children[i], false);
+                    }
+                }
+                while (pNode) {
+                    if (pNode === treeNode) {
+                        break;
+                    }
+                    pNode = pNode.getParentNode();
+                }
+                if (!pNode) {
+                    _this.singlePath(treeNode);
+                }
+                treeObj = $.fn.zTree.getZTreeObj("treeDemo");
+                treeObj.setting.async.url = "/user/ListByTree?node=" + treeNode.id + "&id=" + treeNode.id;
+            },
+            singlePath: function (newNode) {
+                var _this = this;
+                if (newNode === _this.curExpandNode) return;
+
+                var zTree = $.fn.zTree.getZTreeObj("treeDemo"),
+                        rootNodes, tmpRoot, tmpTId, i, j, n;
+
+                if (!_this.curExpandNode) {
+                    tmpRoot = newNode;
+                    while (tmpRoot) {
+                        tmpTId = tmpRoot.tId;
+                        tmpRoot = tmpRoot.getParentNode();
+                    }
+                    rootNodes = zTree.getNodes();
+                    for (i=0, j=rootNodes.length; i<j; i++) {
+                        n = rootNodes[i];
+                        if (n.tId != tmpTId) {
+                            zTree.expandNode(n, false);
+                        }
+                    }
+                } else if (_this.curExpandNode && _this.curExpandNode.open) {
+                    if (newNode.parentTId === _this.curExpandNode.parentTId) {
+                        zTree.expandNode(_this.curExpandNode, false);
+                    } else {
+                        var newParents = [];
+                        while (newNode) {
+                            newNode = newNode.getParentNode();
+                            if (newNode === _this.curExpandNode) {
+                                newParents = null;
+                                break;
+                            } else if (newNode) {
+                                newParents.push(newNode);
+                            }
+                        }
+                        if (newParents!=null) {
+                            var oldNode = _this.curExpandNode;
+                            var oldParents = [];
+                            while (oldNode) {
+                                oldNode = oldNode.getParentNode();
+                                if (oldNode) {
+                                    oldParents.push(oldNode);
+                                }
+                            }
+                            if (newParents.length>0) {
+                                zTree.expandNode(oldParents[Math.abs(oldParents.length-newParents.length)-1], false);
+                            } else {
+                                zTree.expandNode(oldParents[oldParents.length-1], false);
+                            }
+                        }
+                    }
+                }
+                _this.curExpandNode = newNode;
+            },
+            // 数据异步成功后执行函数
+            onAsyncSuccess: function (event, treeId, treeNode, msg) {
+                var _this = this;
+                treeObj = $.fn.zTree.getZTreeObj("treeDemo");
+                var json =msg[0];
+                _this.showSliderIcon();
+            },
+            // 设置下拉树结构
+            addDiyDom: function (treeId, treeNode) {
+                var spaceWidth = 5;
+                var switchObj = $("#" + treeNode.tId + "_switch"),
+                icoObj = $("#" + treeNode.tId + "_ico");
+                switchObj.remove();
+                icoObj.before(switchObj);
+                if (treeNode.level > 1) {
+                    var spaceStr = "<span style='display: inline-block;width:" + (spaceWidth * treeNode.level)+ "px'></span>";
+                    switchObj.before(spaceStr);
+                }
+            },
+            // 折叠图标样式设置
+            showSliderIcon: function () {
+                var treeObj = $("#treeDemo");
+                zTree_Menu = $.fn.zTree.getZTreeObj("treeDemo");
+                curMenu = zTree_Menu.getNodes()[0].children[0];
+                zTree_Menu.selectNode(curMenu);
+                treeObj.hover(function () {
+                    if (!treeObj.hasClass("showIcon")) {
+                        treeObj.addClass("showIcon");
+                    }
+                }, function() {
+                    treeObj.removeClass("showIcon");
+                });
+            },
+            // 页面地区下拉树
+            showTreeMenu : function () {
+                var _this = this;
+                var cityObj = $("#citySel");
+                var cityOffset = $("#citySel").offset();
+                $("#menuContent").css({left:0 + "px", top:33 + "px"}).slideDown("fast");
+
+                $("body").bind("mousedown", _this.onBodyDown);
+            },
+            // 隐藏
+            hideMenu: function () {
+                var _this = this;
+                $("#menuContent").fadeOut("fast");
+                $("body").unbind("mousedown", _this.onBodyDown);
+            },
+            onBodyDown: function (event) {
+                var _this = this;
+                if (!(event.target.id == "menuBtn" || event.target.id == "citySel" || event.target.id == "menuContent" || $(event.target).parents("#menuContent").length>0)) {
+                    _this.hideMenu();
+                }
+            },
+            // 单位下拉框
+            GetDwSelected: function () {
+                var _this = this;
+                $.post("/user/getallcomp", { page: 1, start: 0, limit: 25 }, function (data) {
+                    $.each(data, function (index, item) {
+                        _this.Selected4.push(item);
+                    })
+                }, "json");
+            },
+            // 年份下拉框
+            GetYearSelected: function () {
+                var _this = this;
+                $.post("/user/getYear", { page: 1, start: 0, limit: 25 }, function (data) {
+                    $.each(data, function (index, item) {
+                        _this.Selected5.push(item);
+                    })
+                }, "json");
+            },
+            // 类别下拉选项框类目下的备注选项选中后显示的关键字下拉
+            GetKeyWordSelected: function (YearId) {
+                var _this = this;
+                $.post("/user/getBz", { page: 1, start: 0, limit: 25, year: YearId }, function (data) {
+                    $("#selected6").selected('destroy');
+                    $.each(data, function (index, item) {
+                        _this.Selected6.push(item);
+                    })
+                }, "json");
+            },
+            // 新增用户
+            AddUser: function () {
+                var _this = this;
+                // 角色禁用
+                $("#pop-selected-6").selected('disable');
+                // 单位禁用
+                $("#pop-selected-10").selected('disable');
+                // 出生日期初始化
+                $("#DateBegin").datepicker({ format: "yyyy-mm-dd" }).on("changeDate.datepicker.amui", function (event) {
+                    _this.begin = event.date.format("yyyy-MM-dd");
+                });
+                // 单位性质
+                $.post("/user/getdwdiv", { page: 1, start: 0, limit: 25 }, function (data) {
+                    $.each(data, function (index, item) {
+                        _this.DWXZ.push(item);
+                    })
+                }, "json");
+                // 岗位
+                $.post("/user/getStation", { page: 1, start: 0, limit: 25 }, function (data) {
+                    _this.PostData = data;
+                }, "json");
+
+                // 加载地区下拉树
+                $.fn.zTree.init($("#treePopDemo"), _this.zTreePopMenuFun());
+
+                // 新增进来所有的选项框先清空
+                _this.Name = '',// 姓名
+                _this.SexId = -1,// 性别
+                _this.FamilyNameId = -1, // 民族
+                _this.CardID = '', // 身份证ID
+                _this.Origin = '',// 籍贯
+                _this.begin = '',// 出生日期
+                _this.HighestEducationId = -1,// 最高学历
+                _this.GraduationSchool = '', // 毕业院校
+                _this.Major = '', // 专业
+                _this.PoliticalOutlookId = -1, // 政治面貌
+                _this.Username = '',// 用户名
+                _this.RoleId = '',// 角色
+                _this.StateId = -1,// 状态
+                _this.PhoneNum = '',// 电话号码
+                _this.TellNum = '',// 座机号码
+                _this.Email = '',// 电子邮件
+                _this.beizhuTxt = '',// 备注
+                _this.DwId = '',// 单位性质
+                _this.DWXZId = '',// 单位性质
+                _this.Department = '',// 科室
+                _this.PostIds = [],// 岗位
+                _this.Psd1 = '', // 密码
+                _this.Psd2 = '',// 确认密码
+                _this.JobId = '',// 职位
+                _this.PsdExpirationTime = '' // 时间过期天数
+                _this.EditPopViews = true;
+                // 打开新增用户弹出页面
+                layer.open({
+                    type: 1,
+                    title: '添加用户信息',
+                    shade: 0.8,
+                    move: false,
+                    btn: ['提交', '取消'],
+                    area: ['800px', '550px'], //宽高
+                    content: $("#bbbbb"),
+                    yes: function (index, layero) {
+                        // 判断姓名是否为空
+                        if (_this.Name == "" || _this.Name == null) {
+                            alert("姓名不能为空");
+                            return false;
+                        } else if (_this.SexId == "" || _this.SexId == null) {
+                            alert("性别为必选项");
+                            return false;
+                        } else if (_this.CardID == "" || _this.CardID == null) {
+                            alert("身份证号码不能为空");
+                            return false;
+                        } else if (_this.CardID.length !== 18) {
+                            alert("身份证号码输入错误");
+                            return false;
+                        } else if (_this.DqId == "" || _this.DqId == null) {
+                            alert("地区为必选项");
+                            return false;
+                        } else if (_this.RoleId == "" || _this.RoleId == null) {
+                            alert("角色为必选项");
+                            return false;
+                        } else if (_this.StateId == "" || _this.StateId == null) {
+                            alert("状态为必选项");
+                            return false;
+                        } else if (_this.DwId == "" || _this.DwId == null) {
+                            alert("单位为必选项");
+                            return false;
+                        } else if (_this.Psd1 == "" || _this.Psd1 == null) {
+                            alert("密码为必填项");
+                            return false;
+                        } else if (_this.Psd1 != _this.Psd2) {// 判断两次输入的密码是否一致
+                            alert("两次密码输入不一致");
+                            return false;
+                        }
+
+                        $.ajax({
+                            url: '/user/addOrUpd',
+                            data: {
+                                page: 1,
+                                start: 0,
+                                limit: 25,
+                                name: _this.Name,
+                                cardID: _this.CardID,
+                                sex: _this.SexId,
+                                birthday: _this.begin,
+                                nation: _this.FamilyNameId,
+                                placeoforigin: _this.Origin,
+                                education: _this.HighestEducationId,
+                                university: _this.GraduationSchool,
+                                professional: _this.Major,
+                                politicsStatu: _this.PoliticalOutlookId,
+                                AreaID: _this.DqId,
+                                RoleID: _this.RoleId,
+                                DW_DIV: _this.DWXZId,
+                                mail: _this.Email,
+                                mobile: _this.PhoneNum,
+                                tel: _this.TellNum,
+                                BZ: _this.beizhuTxt,
+                                IsAlive: _this.StateId,
+                                CompanyID: _this.DwId,
+                                DepartmentID: _this.Department,
+                                station: _this.PostIds,
+                                pwd: _this.Psd1,
+                                pwd2: _this.Psd2,
+                                pwdTime: _this.PsdExpirationTime
+                            },
+                            type: 'post',
+                            dataType: 'json',
+                            success: function (data) {
+                                if (data.success == true) {
+                                    alert(data.Msg);
+                                    layer.closeAll();
+                                    _this.getList();
+                                } else {
+                                    alert('添加失败：' + data.Msg);
+                                }
+                            }
+                        })
+                    }
+                });
+            },
+            // 新增弹出框地区下拉数据处理
+            zTreePopMenuFun: function () {
+                var _this = this;
+                var setting = {
+                    async: {
+                        enable: true,
+                        url:"/user/ListByTree",
+                        autoParam:["id", "node"],
+                        otherParam:{"node":'root',"id":'root'},
+                        type:'post',
+                        dataType:'json',
+                        dataFilter: _this.Popfilter
+                    },
+                    data: {
+                        key: {
+                            "name": "text"
+                        },
+                        simpleData : {
+                            enable : true,    
+                            idKey : "id", // id编号命名     
+                            pIdKey : "parentid", // 父id编号命名      
+                            rootId : 0  
+                        }
+                        ,
+                        keep: {
+                            parent: true,
+                            leaf: true
+                        }
+                    },
+                    callback: {
+                        beforeExpand: _this.beforeExpandPop,
+                        onClick:_this.onPopclick,
+                        onAsyncSuccess: _this.onAsyncSuccessPop
+                    },
+                    view: {
+                        showLine: false,
+                        showIcon: false,
+                        selectedMulti: false,
+                        dblClickExpand: false,
+                        addDiyDom: _this.PopAddDiyDom
+                    }
+                };
+                return setting;
+            },
+            Popfilter : function (treeId, parentNode, childNodes) {
+                if (!childNodes) return null;    
+                if(typeof(parentNode)==='undefined'){
+                    for (var i=0; i<childNodes.length; i++) {
+                        for (var j = 0; j < childNodes[i].children.length; j++) {
+                             if(childNodes[i].children[j].leaf == false){
+                                childNodes[i].children[j].isParent = true;
+                            }
+                        }
+                    }
+                }else{
+                     for (var i=0; i<childNodes.length; i++) {
+                        if(childNodes[i].leaf == false){
+                            childNodes[i].isParent = true;
+                        }
+                    }
+                }
+                return childNodes;
+            },
+            // 新增弹出框地区下拉树型选中节点
+            onPopclick: function (e, treeId, treeNode) {
+                var _this = this;
+                _this.dqValPop = treeNode.text;
+                _this.DqId = treeNode.id;
+                _this.hideMenuPop();
+                // 角色启用并加载数据
+                $.post("/user/getroleByArea", { page: 1, start: 0, limit: 25, areaid: _this.DqId }, function (data) {
+                    _this.RoleData = [];// 每次的数据更新需要先提前把数组清空
+                    $.each(data, function (index, item) {
+                        _this.RoleData.push(item);
+                    })
+                }, "json");
+                // 只有地区选择后才能选择单位，这里就是加载单位数据
+                $.post("/user/getcompByArea", { page: 1, start: 0, limit: 25, areaid: _this.DqId }, function (data) {
+                    _this.DWData = [];// 每次的数据更新需要先提前把数组清空
+                    $.each(data, function (index, item) {
+                        _this.DWData.push(item);
+                    })
+                }, "json");
+            },
+            PopAddDiyDom: function (treeId, treeNode) {
+                var spaceWidth = 5;
+                var switchObj = $("#" + treeNode.tId + "_switch"),
+                icoObj = $("#" + treeNode.tId + "_ico");
+                switchObj.remove();
+                icoObj.before(switchObj);
+                if (treeNode.level > 1) {
+                    var spaceStr = "<span style='display: inline-block;width:" + (spaceWidth * treeNode.level)+ "px'></span>";
+                    switchObj.before(spaceStr);
+                }
+            },
+            beforeExpandPop:function(treeId, treeNode){
+                var _this = this;
+                var pNode = _this.curExpandNode ? _this.curExpandNode.getParentNode():null;
+                var treeNodeP = treeNode.parentTId ? treeNode.getParentNode():null;
+                var zTree = $.fn.zTree.getZTreeObj("treePopDemo");
+                for(var i=0, l=!treeNodeP ? 0:treeNodeP.children.length; i<l; i++ ) {
+                    if (treeNode !== treeNodeP.children[i]) {
+                        zTree.expandNode(treeNodeP.children[i], false);
+                    }
+                }
+                while (pNode) {
+                    if (pNode === treeNode) {
+                        break;
+                    }
+                    pNode = pNode.getParentNode();
+                }
+                if (!pNode) {
+                    _this.singlePath(treeNode);
+                }
+                 treeObj = $.fn.zTree.getZTreeObj("treePopDemo");
+                 treeObj.setting.async.url = "/user/ListByTree?node=" + treeNode.id + "&id=" + treeNode.id
+            },
+            // 数据异步成功后执行函数
+            onAsyncSuccessPop: function (event, treeId, treeNode, msg) {
+                var _this = this;
+                treeObj = $.fn.zTree.getZTreeObj("treePopDemo");
+                var json =msg[0];
+                _this.showSliderPopIcon();
+            },
+            // 折叠图标样式设置
+            showSliderPopIcon: function () {
+                var treeObj = $("#treePopDemo");
+                zTree_Menu = $.fn.zTree.getZTreeObj("treePopDemo");
+                curMenu = zTree_Menu.getNodes()[0].children[0];
+                zTree_Menu.selectNode(curMenu);
+                treeObj.hover(function () {
+                    if (!treeObj.hasClass("showIcon")) {
+                        treeObj.addClass("showIcon");
+                    }
+                }, function() {
+                    treeObj.removeClass("showIcon");
+                });
+            },
+            // 弹出框地区下拉树
+            showTreePopMenu: function () {
+                var _this = this;
+                var cityObj = $("#citySel");
+                var cityOffset = $("#citySel").offset();
+                $("#menuContent1").css({left:18 + "px", top:33 + "px"}).slideDown("fast");
+
+                $("body").bind("mousedown", _this.onBodyDown);
+            },
+            // 隐藏
+            hideMenuPop: function () {
+                var _this = this;
+                $("#menuContent").fadeOut("fast");
+                $("#menuContent1").fadeOut("fast");
+                $("body").unbind("mousedown", _this.onBodyDown);
+            },
+
+            // 默认排序
+            DefaultSort: function () {
+                var _this = this;
+                _this.GetUserSelectedId = '';
+                _this.treeid = '';
+                _this.selectedTypeId = '';
+                _this.GetDwSelectedId = '';
+                _this.Keyword = '';
+                _this.getList();
+            },
+            // 批量删除用户
+            RemoveSelectedUser: function () {
+                var _this = this;
+                var a = 0;// 选中的数量
+                _this.CheckedAllIdArry = [];
+                for (var i = 0; i < _this.GridListsData.length; i++) {
+                    if (_this.GridListsData[i].CheckItem == true) {
+                        a++;
+                        _this.CheckedAllIdArry.push(_this.GridListsData[i]);// 将选中的用户的id存入CheckedAllIdArry数组
+                    }
+                }
+                var JsonDataCheckedAll = JSON.stringify(_this.CheckedAllIdArry);//将json对象转换成json字符串数组
+                if (a >= 1) {
+                    layer.confirm('您确定要删除此用户？', {
+                        icon: 3,
+                        title: '删除用户',
+                        btn: ['确 定', '取 消'] //按钮
+                    }, function () {
+                        $.post('/user/del', {
+                            Role_S: _this.GetUserSelectedId,
+                            DW_DIV_S:-1,
+                            AreaID_S: _this.treeid,
+                            CompanyID_S: _this.GetDwSelectedId,
+                            AddUser:'',
+                            key: _this.selectedTypeId,
+                            kvalue: _this.Keyword,
+                            checkdiscardid:-1,
+                            data: JsonDataCheckedAll
+                        }, function (data) {
+                            if (data.success) {
+                                layer.closeAll();
+                                alert(data.Msg)
+                                _this.getList();
+                            }
+                        }, "json");
+                    }, function () {
+                        return;
+                    });
+                } else {
+                    layer.alert('请选择要删除的用户', {
+                        icon: 8,
+                        title: '提示',
+                        skin: 'layer-ext-moon'
+                    })
+                }
+            },
+            // 编辑用户
+            EditUser: function (ItemObjId) {
+                var _this = this;
+                _this.EditPopViews = false;
+                $.post("/user/detail", { id: ItemObjId }, function (data) {
+                    if (data.success == true) {
+                        var detailData = data.data;
+                        _this.EditId = detailData.id;// id
+                        _this.Name = detailData.name;// 姓名
+                        _this.SexId = detailData.sex;// 性别
+                        _this.CardID = detailData.cardID; // 身份证ID
+                        _this.Username = detailData.userName;// 用户名
+                        _this.StateId = detailData.IsAlive;// 状态
+
+                        //_this.DqId = detailData.AreaID; // 地区
+                        //_this.RoleId = detailData.RoleID;// 角色
+                        //_this.DwId = detailData.CompanyID;// 单位性质
+
+                        _this.FamilyNameId = detailData.nation; // 民族
+                        _this.Origin = detailData.placeoforigin;// 籍贯
+                        _this.begin = detailData.birthday;// 出生日期
+                        _this.HighestEducationId = detailData.education;// 最高学历
+                        _this.GraduationSchool = detailData.university; // 毕业院校
+                        _this.Major = detailData.professional; // 专业
+                        _this.PoliticalOutlookId = detailData.politicsStatu; // 政治面貌
+                        _this.PhoneNum = detailData.mobile;// 电话号码
+                        _this.TellNum = detailData.tel;// 座机号码
+                        _this.Email = detailData.mail;// 电子邮件
+                        _this.beizhuTxt = detailData.BZ;// 备注
+                        _this.DWXZId = detailData.DW_DIV;// 单位性质
+                        _this.Department = detailData.DepartmentID;// 科室
+                        _this.PostIds = [];// 岗位
+                        _this.JobId = detailData.PositionID;// 职位
+                        // 密码/确认密码/时间过期天数在编辑状态下是不显示的
+                        _this.Psd1 = ''; // 密码
+                        _this.Psd2 = '';// 确认密码
+                        _this.PsdExpirationTime = ''; // 时间过期天数
+
+                        // 加载地区下拉树
+                        $.fn.zTree.init($("#treePopDemo"), _this.zTreePopMenuFun());
+
+                        // 打开编辑用户弹出页面
+                        layer.open({
+                            type: 1,
+                            title: '编辑用户信息',
+                            shade: 0.8,
+                            move: false,
+                            btn: ['提交', '取消'],
+                            area: ['800px', '550px'], //宽高
+                            content: $("#bbbbb"),
+                            yes: function (index, layero) {
+                                // 判断姓名是否为空
+                                if (_this.Name == "" || _this.Name == null) {
+                                    alert("姓名不能为空");
+                                    return false;
+                                } else if (_this.SexId == "" || _this.SexId == null) {
+                                    alert("性别为必选项");
+                                    return false;
+                                } else if (_this.CardID == "" || _this.CardID == null) {
+                                    alert("身份证号码不能为空");
+                                    return false;
+                                } else if (_this.DqId == "" || _this.DqId == null) {
+                                    alert("地区为必选项");
+                                    return false;
+                                } else if (_this.RoleId == "" || _this.RoleId == null) {
+                                    alert("角色为必选项");
+                                    return false;
+                                } else if (_this.StateId == "" || _this.StateId == null) {
+                                    alert("状态为必选项");
+                                    return false;
+                                } else if (_this.DwId == "" || _this.DwId == null) {
+                                    alert("单位为必选项");
+                                    return false;
+                                } 
+                                $.ajax({
+                                    url: '/user/addOrUpd',
+                                    data: {
+                                        id: _this.EditId,
+                                        name:_this.Name,
+                                        cardID:_this.CardID,
+                                        sex:_this.SexId,
+                                        birthday:_this.begin,
+                                        nation:_this.FamilyNameId,
+                                        placeoforigin:_this.Major,
+                                        education:_this.HighestEducationId,
+                                        university:_this.GraduationSchool,
+                                        professional:_this.Major,
+                                        politicsStatu:_this.PoliticalOutlookId,
+                                        AreaID:_this.DqId,
+                                        RoleID:_this.RoleId,
+                                        mail:_this.Email,
+                                        mobile:_this.PhoneNum,
+                                        tel:_this.TellNum,
+                                        BZ:_this.beizhuTxt,
+                                        IsAlive: _this.StateId,
+                                        CompanyID: _this.DwId,
+                                    },
+                                    type: 'post',
+                                    dataType: 'json',
+                                    success: function (data) {
+                                        if (data.success == true) {
+                                            alert(data.Msg);
+                                            layer.closeAll();
+                                            _this.getList();
+                                        } else {
+                                            alert('添加失败：' + data.Msg);
+                                        }
+                                    }
+                                })
+                            }
+                        });
+                    }
+                }, "json");
+            },
+            // 设置用户密码
+            SetUserPwd: function (CustomerID) {
+                var _this = this;
+                // 打开新增用户弹出页面
+                layer.open({
+                    type: 1,
+                    title: '添加用户信息',
+                    shade: 0.8,
+                    move: false,
+                    btn: ['提交', '取消'],
+                    area: ['500px', '280px'], //宽高
+                    content: $("#cccc"),
+                    yes: function (index, layero) {
+                        if (_this.Psd1 !== _this.Psd2) {
+                            layer.alert('两次输入的密码不一致', {
+                                icon: 8,
+                                title: '提示',
+                                skin: 'layer-ext-moon'
+                            });
+                            return false;
+                        }
+                        $.post("/user/updPwd", { id: CustomerID, pwd: _this.Psd1, pwd2: _this.Psd2, pwdTime: _this.PsdExpirationTime }, function (data) {
+                            if (data.success) {
+                                alert(data.Msg);
+                            } else {
+                                alert(data.Msg)
+                            }
+                            layer.closeAll();
+                            _this.getList();
+                        }, "json");
+                    }
+                })
+            },
+            // 删除用户
+            RemoveUser: function (RemoveJsonObj) {
+                var _this = this;
+                var RemoveJsonDataArry = [RemoveJsonObj];
+                var RemoveJsonData = JSON.stringify(RemoveJsonDataArry);//将json对象转换成json字符串数组
+                layer.confirm('您确定要删除此用户？', {
+                    title: _this.ViewsTitle,
+                    btn: ['确 定', '取 消'], //按钮
+                    icon: 3
+                }, function () {
+                    $.post('/user/del', {
+                        data: RemoveJsonData,
+                        isSh: 1
+                    }, function (data) {
+                        if (data.success) {
+                            layer.closeAll();
+                            alert(data.Msg)
+                        }
+                        _this.getList();
+                    }, "json");
+                }, function () {
+                    return;
+                });
+            },
+            // 初始化
+            initSelectDate: function () {
+                var _this = this;
+                // 初始化tree
+                $.fn.zTree.init($("#treeDemo"), _this.zTreeFun());
+                // 角色下拉初始化
+                $('#selected1').selected({ 'btnWidth': '100%', btnSize: 'sm', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.GetUserSelectedId = $(this).val();
+                });
+                // 类别下拉初始化
+                $('#selected3').selected({ 'btnWidth': '100%', btnSize: 'sm', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.selectedTypeId = $(this).val();
+                    if (_this.selectedTypeId == 4) {
+                        $(".NoteShows").show();
+                        $("#SearchGroupBtn").hide();
+                        // 年份下拉框
+                        _this.GetYearSelected();
+                    } else {
+                        $(".NoteShows").hide();
+                        $("#SearchGroupBtn").show();
+                    }
+                });
+                // 单位下拉初始化
+                $('#selected4').selected({ 'btnWidth': '100%', btnSize: 'sm', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.GetDwSelectedId = $(this).val();
+                });
+                // 年份下拉初始化
+                $('#selected5').selected({ 'btnWidth': '100%', btnSize: 'sm', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.GetYearSelectedId = $(this).val();
+                    if (_this.GetYearSelectedId != -1) {
+                        // 类别下拉选项框类目下的备注选项选中后显示的关键字下拉
+                        _this.GetKeyWordSelected(_this.GetYearSelectedId);
+                        _this.Selected6 = [{ "id": "-1", "text": "点击选择..." }];
+                    }
+                    if (_this.GetYearSelectedId == -1) {
+                        _this.Selected6 = [{ "id": "-1", "text": "点击选择..." }];
+                    }
+                });
+                // 新增用户弹出框初始化下拉选项框
+                $('.popmodelpanel select').selected({ 'btnWidth': '100%', btnSize: 'sm', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.GetDwSelectedId = $(this).val();
+                });
+            },
+        },
+        mounted: function () {
+            var _this = this;
+            // 发送记录列表调用函数
+            _this.getList();
+            // 下拉初始化
+            _this.initSelectDate();
+            // 角色下拉框
+            _this.GetUserSelected();
+            // 单位下拉框
+            _this.GetDwSelected();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "用户管理"
+        },
+        beforeCreate: function () {
+           // router.push("ListPage");
+        },
+        mounted: function () {
+            router.push("ListPage");
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

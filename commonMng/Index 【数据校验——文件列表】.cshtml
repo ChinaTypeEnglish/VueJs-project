@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>文件列表</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <link href="@(Url.Content("~/Content/global.css"))" rel="stylesheet" />
+    <style type="text/css">
+        html{
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+        .selectedHight .am-btn, .popmodelpanel .am-btn {
+            padding: 0.695em 1em;
+        }
+        .popmodelpanel input {
+            width: 80%;
+        }
+        .popmodelpanel .am-btn {
+            background: none;
+        }
+        #DateBegin .am-btn {
+            border-color: #ccc;
+            background: #e6e6e6;
+        }
+        .am-datepicker-dropdown {
+            z-index: 198910161;
+        }
+        .split {
+            width: 100%;
+            height: 20px;
+            background: #fff;
+        }
+        .labelFormat{
+            line-height: 33px;
+            margin-bottom: 0px;
+        }
+        .am-datepicker{
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">数据校验</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tab-panel">
+        <!-- 下拉组 -->
+        <div class="selected-wrapper">
+            <div class="am-g">
+                <div class="am-u-sm-3 selectedHight">
+                    <div class="am-form-group">
+                        <label class="am-u-sm-3 am-form-label am-text-default labelFormat">考试年度:</label>
+                        <div class="am-u-sm-9">
+                            <laiq-select valuekey="id" labelkey="text" btnwidth="100%" maxheight="155" search-Box v-bind:model="GetYearLists" v-model="SelectedYear"></laiq-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-u-sm-3 selectedHight">
+                    <div class="am-form-group">
+                        <label class="am-u-sm-3 am-form-label am-text-default labelFormat">考试名称:</label>
+                        <div class="am-u-sm-9">
+                            <laiq-select valuekey="id" labelkey="text" btnwidth="100%" maxheight="155" search-Box v-bind:model="GetKsNameLists" v-model="SelectedKsName"></laiq-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-u-sm-2">
+                    <div class="am-input-group am-input-group-sm">
+                        <span class="am-input-group-btn">
+                            <button class="am-btn am-btn-default" type="button" v-on:click="SearchFileFun">
+                                <i class="am-icon-search"></i>
+                                查 询
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="am-u-sm-11"></div>
+            </div>
+        </div>
+        <!-- 仅占位置 -->
+        <div class="split"></div>
+        <div class="am-g">
+            <div class="am-u-sm-12">
+                <table class="am-table am-table-striped am-table-hover table-main">
+                    <thead>
+                        <tr>
+                            <th>考试代码</th>
+                            <th>考试年月</th>
+                            <th>考试名称</th>
+                            <th>考试文件名称</th>
+                            <th>地区</th>
+                            <th>状态</th>
+                            <th>上传人</th>
+                            <th>上传时间</th>
+                            <th>下载人</th>
+                            <th>下载时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(item,$index) in GridListsData" v-bind:value="item.CustomerID">
+                            <td>{{item.dc_kscode}}</td>
+                            <td>{{item.ksny}}</td>
+                            <td>{{item.dc_ksname}}</td>
+                            <td>{{item.Ufilename}}</td>
+                            <td>{{item.areaname}}</td>
+                            <td>{{item.state}}</td>
+                            <td>{{item.uploadper}}</td>
+                            <td>{{item.uploadDate}}</td>
+                            <td>{{item.downper}}</td>
+                            <td>{{item.downDate}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 分页设置 -->
+        <div class="am-tab-panel">
+            <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;">
+                <div class="am-u-sm-12">
+                    共 <span v-text="totle"></span> 条记录
+                    <div class="am-fr">
+                        <div id="page"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script type="text/javascript" src="/Content/vue/laiqui/laiqui.min.js"></script>
+<script>
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        watch: {
+            // 监听年份选择事件
+            SelectedYear: function (val, oldVal) {
+                var _this = this;
+                _this.SelectYearId = val;
+            },
+            // 监听考试名称选择事件
+            SelectedKsName: function (val, oldVal) {
+                var _this = this;
+                _this.SelectKsNameId = val;
+            }
+        },
+        data: function () {
+            return {
+                GridListsData: [],
+                totle: 0,
+                count: 0, 
+                GetYearLists: [], // 获取年份下拉列表数据
+                SelectYearId: '', // 获取选中年份对应ID
+                SelectedYear: '', // 判断 “选择年份” 下拉列表是否是单选, v-model对应的值, 单选为number,  多选为Array;
+                GetKsNameLists: [],
+                SelectKsNameId: '', // 获取选中考试名称对应ID
+                SelectedKsName: '' // 判断 “选择年份” 下拉列表是否是单选, v-model对应的值, 单选为number,  多选为Array;
+
+            }
+        },
+        methods: {
+            GetListsFun: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/datacheck/dc_look/dc_setList", {
+                    page: 1,
+                    start: 0,
+                    limit: 45,
+                    ksYear: _this.SelectYearId,
+                    KSName: _this.SelectKsNameId
+                }, function (data) {
+                    _this.GridListsData = data.data;
+                    _this.totle = data.total;
+                    if (_this.GridListsData !== null) {
+                        // 为每个对象设置是否选中
+                        for (var i = 0; i < _this.GridListsData.length; i++) {
+                            data.data[i].CheckItem = false;
+                        }
+                        _this.count = Math.ceil(_this.totle / 45);
+                        if (_this.count > 1) {
+                            $("#page").show();
+                            laypage({
+                                cont: "page", pages: _this.count, groups: 5, skin: "#1E9FFF", jump: function (obj, first) {
+                                    if (!first) {
+                                        $.post("/datacheck/dc_look/dc_setList", { page: obj.curr, start: 0, limit: 45, ksYear: _this.SelectYearId, KSName: _this.SelectKsNameId}, function (data) {
+                                            _this.GridListsData = data.data;
+                                            _this.count = data.total;
+                                        }, "json");
+                                    }
+                                }
+                            });
+                        } else {
+                            // 小于1页或者没有数据的情况下不显示分页
+                            $("#page").hide();
+                        }
+                        layer.closeAll();
+                    } else {
+                        layer.alert('暂无此次搜索项内容', {
+                            icon: 5,
+                            title: '提示',
+                            skin: 'layer-ext-moon'
+                        })
+                    }
+                }, "json");
+            },
+            // 获取年份
+            GetYearsFun: function () {
+                var _this = this;
+                $.post("/datacheck/dc_look/getDc_ksYear", { page: 1, start: 0, limit: 25}, function (data) {
+                    _this.GetYearLists = data;
+                }, "json");
+            },
+            // 获取考试名称
+            GetKsNameFun: function () {
+                var _this = this;
+                $.post("/datacheck/dc_look/getDc_ksName", { page: 1, start: 0, limit: 25}, function (data) {
+                   _this.GetKsNameLists = data;
+                }, "json");
+            },
+            // 搜索考试文件列表
+            SearchFileFun: function () {
+                var _this = this;
+                _this.GetListsFun();
+            },
+            initSelectDate: function () {
+                var _this = this;
+            }
+        },
+        mounted: function () {
+            var _this = this;
+            // 年份加载函数
+            _this.GetYearsFun();
+            // 考试名称加载函数
+            _this.GetKsNameFun();
+            // 列表数据调用函数
+            _this.GetListsFun();
+            // 下拉初始化
+            // _this.initSelectDate();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "文件列表"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>

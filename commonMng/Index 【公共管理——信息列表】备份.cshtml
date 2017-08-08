@@ -1,0 +1,416 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>信息列表</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/Content/amaze/css/amazeui.min.css">
+    <style type="text/css">
+        html, body {
+            font-size: 54.6875%; /*10 ÷ 16 × 100% = 62.5%*/
+        }
+        .am-tabs-bd {
+            border-bottom: 0px;
+            border-right: 0px;
+            border-left: 0px;
+        }
+        .selectedHight .am-btn {
+            padding: 0.41em 1em;
+        }
+
+        .selectedHight .am-btn-default {
+            border-color: #ccc;
+        }
+
+        .am-modal-dialog {
+            width: 450px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-content">
+        <div class="admin-content-body">
+            <div class="am-cf am-padding am-padding-bottom-0">
+                <div class="am-fl am-cf"><strong class="am-text-primary am-text-lg">公共管理</strong> / <small v-text="title"></small></div>
+            </div>
+            <hr>
+        </div>
+        <transition mode="out-in">
+            <router-view></router-view>
+        </transition>
+    </div>
+</body>
+<!-- 模板 -->
+<script type="text/template" id="template-list">
+    <div class="am-tabs" id="doc-tab-demo-1">
+        <ul class="am-tabs-nav am-nav am-nav-tabs">
+            <li v-bind:class="{'am-active':ss==1}" v-on:click="ss=1">
+                <a href="javascript: void(0)">管理员公告</a>
+            </li>
+            <li v-bind:class="{'am-active':ss==2}" v-on:click="ss=2">
+                <a href="javascript: void(0)">地区公告</a>
+            </li>
+        </ul>
+
+        <div class="am-tabs-bd">
+            <div class="am-tab-panel" v-bind:class="{'am-active':ss==1}">
+                <!-- 表单输入框 -->
+                <div class="am-g">
+                    <div class="am-u-sm-1">
+                        <span style="float:right;line-height:32px;">查询项:</span>
+                    </div>
+                    <div class="am-u-sm-2 selectedHight">
+                        <select id="selected1">
+                            <option v-for="item in GLYSearchList" v-bind:value="item.value">{{item.label}}</option>
+                        </select>
+                    </div>
+                    <div class="am-u-sm-2">
+                        <div id="DateBegin" class="am-input-group am-input-group-sm am-datepicker-date">
+                            <input type="text" class="am-form-field" v-bind:value="begin" placeholder="开始时间">
+                            <span class="am-input-group-btn am-datepicker-add-on">
+                                <button class="am-btn am-btn-default" type="button"><span class="am-icon-calendar"></span> </button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-2">
+                        <div id="DateEnd" class="am-input-group am-input-group-sm am-datepicker-date">
+                            <input type="text" class="am-form-field" v-bind:value="end" placeholder="结束时间">
+                            <span class="am-input-group-btn am-datepicker-add-on">
+                                <button class="am-btn am-btn-default" type="button"><span class="am-icon-calendar"></span> </button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-2">
+                        <div class="am-input-group am-input-group-sm">
+                            <input type="text" class="am-form-field" placeholder="待查询条件" v-model="Svalue">
+                            <span class="am-input-group-btn">
+                                <button class="am-btn am-btn-default" type="button" v-on:click="getList"> 查&nbsp;&nbsp;询 </button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-3"></div>
+                </div>
+                <!-- 占位置 -->
+                <div class="split" style="width: 100%;height: 20px;background: #fff;"></div>
+                <!-- dataGrid -->
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <table class="am-table am-table-striped am-table-hover table-main">
+                            <thead>
+                                <tr>
+                                    <th>标题</th>
+                                    <th>发布人</th>
+                                    <th>最近更新日期</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in GLYGridListsData" v-bind:value="item.id">
+                                    <td>{{item.title}}</td>
+                                    <td>{{item.addUserName}}</td>
+                                    <td>{{item.addDate}}</td>
+                                    <td>
+                                        <div class="am-btn-toolbar">
+                                            <div class="am-btn-group am-btn-group-xs">
+                                                <button class="am-btn am-btn-default am-btn-xs am-text-success" v-on:click="CheckView(item.id)">
+                                                    <i class="am-icon-search"></i>
+                                                    查看
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="am-tab-panel" v-bind:class="{'am-active':ss==2}">
+                <!-- 表单输入框 -->
+                <div class="am-g">
+                    <div class="am-u-sm-1">
+                        <span style="float:right;line-height:32px;">查询项:</span>
+                    </div>
+                    <div class="am-u-sm-2 selectedHight">
+                        <select id="selected_DQ">
+                            <option v-for="item in GLYSearchList" v-bind:value="item.value">{{item.label}}</option>
+                        </select>
+                    </div>
+                    <div class="am-u-sm-2">
+                        <div id="DateBegin_DQ" class="am-input-group am-input-group-sm am-datepicker-date">
+                            <input type="text" class="am-form-field" v-bind:value="begin_DQ" placeholder="开始时间">
+                            <span class="am-input-group-btn am-datepicker-add-on">
+                                <button class="am-btn am-btn-default" type="button"><span class="am-icon-calendar"></span> </button>
+                            </span>
+                        </div>
+                    </div> 
+                    <div class="am-u-sm-2">
+                        <div id="DateEnd_DQ" class="am-input-group am-input-group-sm am-datepicker-date">
+                            <input type="text" class="am-form-field" v-bind:value="end_DQ" placeholder="结束时间">
+                            <span class="am-input-group-btn am-datepicker-add-on">
+                                <button class="am-btn am-btn-default" type="button"><span class="am-icon-calendar"></span> </button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-2">
+                        <div class="am-input-group am-input-group-sm">
+                            <input type="text" class="am-form-field" placeholder="待查询条件" v-model="Svalue_DQ">
+                            <span class="am-input-group-btn">
+                                <button class="am-btn am-btn-default" type="button" v-on:click="DQ_GetList"> 查&nbsp;&nbsp;询 </button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-2"></div>
+                </div>
+                <!-- 占位置 -->
+                <div class="split" style="width: 100%;height: 20px;background: #fff;"></div>
+                <!-- dataGrid -->
+                <div class="am-g">
+                    <div class="am-u-sm-12">
+                        <table class="am-table am-table-striped am-table-hover table-main">
+                            <thead>
+                                <tr>
+                                    <th>标题</th>
+                                    <th>发布人</th>
+                                    <th>最近更新日期</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in DQGridListsData">
+                                    <td>{{item.title}}</td>
+                                    <td>{{item.addUserName}}</td>
+                                    <td>{{item.addDate}}</td>
+                                    <td>
+                                        <div class="am-btn-toolbar">
+                                            <div class="am-btn-group am-btn-group-xs">
+                                                <button class="am-btn am-btn-default am-btn-xs am-text-success" v-on:click="CheckView(item.id)">
+                                                    <i class="am-icon-search"></i>
+                                                    查看
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @* 分页设置 *@
+        <div style="position:fixed;bottom:0px;left:0px;z-index: 999;width:100%;height:50px;">
+            <div class="am-tabs-bd" style="height: 50px;padding-top: 25px;">
+                <!-- 分页1 管理员公告 -->
+                <div class="am-tab-panel" v-bind:class="{'am-active':ss==1}">
+                    <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;">
+                        <div class="am-u-sm-12">
+                            共 <span v-text="totle1"></span> 条记录
+                            <div class="am-fr">
+                                <div id="page1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="am-tab-panel" v-bind:class="{'am-active':ss==2}">
+                    <!-- 分页2 地区公告 -->
+                    <div class="am-topbar am-cf am-topbar-fixed-bottom" style="padding-top: 12px;">
+                        <div class="am-u-sm-12">
+                            共 <span v-text="totle2"></span> 条记录
+                            <div class="am-fr">
+                                <div id="page2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<!-- js 引用 -->
+<script type="text/javascript" src="/Scripts/jquery-1.12.0.min.js"></script>
+<script type="text/javascript" src="/Content/amaze/js/amazeui.min.js"></script>
+<script type="text/javascript" src="/Scripts/laypage/laypage.js"></script>
+<script type="text/javascript" src="/Scripts/layer/layer.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-2.1.6.min.js"></script>
+<script type="text/javascript" src="/Content/vue/vue-router.min.js"></script>
+<script>
+    var  darta
+    // 管理员公告Vue实例
+    var ListPage = Vue.extend({
+        template: '#template-list',
+        data: function () {
+            return {
+                ss: 1,
+                pageTitle: '',
+                GLYGridListsData: [],
+                GLYGridListsDatas: new Array(),
+                GLYSearchList: [{ value: 0, label: "全部公告" }, { value: 1, label: "公告标题" }, { value: 2, label: "发布人" }, { value: 3, label: "公告内容" }],
+                selectedType: '',
+                begin: '',
+                end: '',
+                Svalue: '',
+                totle1: 0,
+                count1: 0,
+                ViewsTitle: '',
+                // 地区公告数据
+                pageTitle_DQ: '',
+                DQGridListsData: [],
+                selectedType_DQ: '',
+                begin_DQ: '',
+                end_DQ: '',
+                Svalue_DQ: '',
+                totle2: 0,
+                count2: 0,
+                ViewState: false,
+            }
+        },
+        methods: {
+            // 管理员公告列表加载
+            getList: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/commonmng/noticemng/listAd", { page: 1, start: 0, limit: 10, type: _this.selectedType, begin: _this.begin, end: _this.end, Svalue: _this.Svalue }, function (data) {
+                    _this.GLYGridListsData = data.data;
+                    _this.totle1 = data.total;
+                    _this.count1 = Math.ceil(data.total / 10);
+                    if (_this.count1 > 1) {
+                        laypage({
+                            cont: "page1", pages: _this.count1, groups: 5, skin: "#1E9FFF", jump: function (obj, first) {
+                                if (!first) {
+                                    $.post("/commonmng/noticemng/listAd", { page: obj.curr, start: 0, limit: 10, type: _this.selectedType, begin: _this.begin, end: _this.end, Svalue: _this.Svalue }, function (data) {
+                                        _this.GLYGridListsData = data.data;
+                                        _this.count = data.total;
+                                    }, "json");
+                                }
+                            }
+                        });
+                    }
+                    layer.closeAll();
+                }, "json");
+            },
+            // 地区公告列表加载
+            DQ_GetList: function () {
+                layer.msg('数据加载中...', { icon: 16, time: 0, shade: [0.1, 'white'] });
+                var _this = this;
+                $.post("/commonmng/noticemng/listArea", { page: 1, start: 0, limit: 10, type: _this.selectedType_DQ, begin: _this.begin_DQ, end: _this.end_DQ, Svalue: _this.Svalue_DQ }, function (data) {
+                    _this.DQGridListsData = data.data;
+                    _this.totle2 = data.total;
+                    _this.count2 = Math.ceil(data.total / 10);
+                    if (_this.count2 > 1) {
+                        laypage({
+                            cont: "page2", pages: _this.count2, groups: 5, skin: "#1E9FFF", jump: function (obj, first) {
+                                if (!first) {
+                                    $.post("/commonmng/noticemng/listArea", { page: obj.curr, start: 0, limit: 10, type: _this.selectedType_DQ, begin: _this.begin_DQ, end: _this.end_DQ, Svalue: _this.Svalue_DQ }, function (data) {
+                                        _this.DQGridListsData = data.data;
+                                        _this.count = data.total;
+                                    }, "json");
+                                }
+                            }
+                        });
+                    }
+                    layer.closeAll();
+                }, "json");
+            },
+            // 管理员公告_查看弹出框 / 地区公告_查看弹出框
+            CheckView: function(id) {
+                layer.open({
+                    type: 2,
+                    title: '查看公告',
+                    shade: 0.8,
+                    move: false,
+                    area: ['850px', '550px'],
+                    content: '/commonMng/noticemng/NoticeDisplay?id=' + id
+                });
+            },
+            initSelectDate: function () {
+                var _this = this;
+                // 管理员公告所有初始化 
+                // 下拉初始化
+                $('#selected1').selected({ 'btnWidth': '100%', btnSize: 'lg', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.selectedType = $(this).val();
+                });
+                // 开始时间初始化
+                $("#DateBegin").datepicker({ format: "yyyy-mm-dd" }).on("changeDate.datepicker.amui", function (event) {
+                    _this.begin = event.date.format("yyyy-MM-dd");
+                });
+                // 结束时间初始化
+                $("#DateEnd").datepicker({ format: "yyyy-mm-dd" }).on("changeDate.datepicker.amui", function (event) {
+                    _this.end = event.date.format("yyyy-MM-dd");
+                });
+                // 地区公告所有初始化 
+                // 下拉初始化
+                $('#selected_DQ').selected({ 'btnWidth': '90%', btnSize: 'lg', maxHeight: 275 }).off('change').on('change', function (e) {
+                    _this.selectedType_DQ = $(this).val();
+                });
+                // 开始时间初始化
+                $("#DateBegin_DQ").datepicker({ format: "yyyy-mm-dd" }).on("changeDate.datepicker.amui", function (event) {
+                    _this.begin_DQ = event.date.format("yyyy-MM-dd");
+                });
+                // 结束时间初始化
+                $("#DateEnd_DQ").datepicker({ format: "yyyy-mm-dd" }).on("changeDate.datepicker.amui", function (event) {
+                    _this.end_DQ = event.date.format("yyyy-MM-dd");
+                }); 
+            },
+        },
+        mounted: function () {
+            var _this = this;
+            // 管理员公告调用函数
+            _this.getList();
+            // 地区公告调用函数
+            _this.DQ_GetList();
+            // 下来框与实践初始化
+            _this.initSelectDate();
+        }
+    })
+
+    const routes = [
+        { path: "/ListPage", component: ListPage, name: "ListPage" },
+        //{ path: "/DQListPage", component: DQListPage, name: "DQListPage" }
+        // { path: "/StatisticsPage", component: StatisticsPage, name: "StatisticsPage" }
+    ];
+    const router = new VueRouter({ routes: routes });
+    var app = new Vue({
+        router: router,
+        data: {
+            title: "信息列表"
+        },
+        beforeCreate: function () {
+            router.push("ListPage");
+        },
+        mounted: function () {
+        },
+        methods: {
+        }
+    }).$mount(".admin-content");
+
+    // 时间date对象初始化
+    Date.prototype.format = function (format) {
+        var o = {
+            "M+": this.getMonth() + 1, // month
+            "d+": this.getDate(), // day
+            "h+": this.getHours(), // hour
+            "m+": this.getMinutes(), // minute
+            "s+": this.getSeconds(), // second
+            "q+": Math.floor((this.getMonth() + 3) / 3), // quarter
+            "S": this.getMilliseconds()
+            // millisecond
+        };
+        if (/(y+)/.test(format)) {
+            format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4
+                            - RegExp.$1.length));
+        }
+        for (var k in o) {
+            if (new RegExp("(" + k + ")").test(format)) {
+                format = format.replace(RegExp.$1, RegExp.$1.length === 1
+                                ? o[k]
+                                : ("00" + o[k]).substr(("" + o[k]).length));
+            }
+        }
+        return format;
+    };
+
+</script>
+</html>
